@@ -1,0 +1,270 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Sentinel AI - Dark Command Center Theme
+   North-star: Palantir / Splunk / Datadog. Deep navy-black surfaces,
+   cyan-tinted primary, restrained phosphor accents, monospace data.
+   ========================================================================== */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+* {
+  border-color: var(--border);
+  outline-color: color-mix(in oklab, var(--ring) 60%, transparent);
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+
+:root,
+.dark {
+  --background: hsl(224 47% 3%);
+  --foreground: hsl(216 32% 92%);
+  --card: hsl(222 44% 6%);
+  --card-foreground: hsl(216 32% 92%);
+  --popover: hsl(222 46% 8%);
+  --popover-foreground: hsl(216 32% 92%);
+  --primary: hsl(193 91% 53%);
+  --primary-foreground: hsl(220 60% 6%);
+  --secondary: hsl(221 36% 12%);
+  --secondary-foreground: hsl(216 26% 84%);
+  --muted: hsl(220 40% 10%);
+  --muted-foreground: hsl(218 20% 58%);
+  --accent: hsl(222 42% 15%);
+  --accent-foreground: hsl(214 40% 92%);
+  --destructive: hsl(358 76% 57%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --success: hsl(160 84% 48%);
+  --warning: hsl(43 96% 56%);
+  --danger: hsl(350 89% 60%);
+  --border: hsl(222 42% 15%);
+  --input: hsl(222 42% 15%);
+  --ring: hsl(193 91% 53%);
+  --chart-1: hsl(193 91% 61%);
+  --chart-2: hsl(171 77% 64%);
+  --chart-3: hsl(43 96% 58%);
+  --chart-4: hsl(358 76% 64%);
+  --chart-5: hsl(262 83% 66%);
+  --radius: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Surfaces: subtle grid + phosphor noise so the UI reads "mission console"
+   -------------------------------------------------------------------------- */
+.bg-command-grid {
+  background-image: linear-gradient(
+      to right,
+      color-mix(in oklab, var(--border) 42%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--border) 42%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 48px 48px;
+}
+
+.bg-command-noise {
+  position: relative;
+}
+
+.bg-command-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 12px color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
+.text-glow-red {
+  text-shadow: 0 0 12px color-mix(in oklab, var(--danger) 55%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   Live indicators
+   -------------------------------------------------------------------------- */
+.live-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--danger);
+}
+
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in oklab, var(--danger) 60%, transparent);
+  animation: live-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes live-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  80%,
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Radar pulse for map markers */
+.radar-pulse {
+  animation: radar-pulse 2.4s ease-out infinite;
+}
+
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* CRT scan sweep used by the simulated live preview */
+.scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 34%;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in oklab, var(--primary) 9%, transparent) 45%,
+    color-mix(in oklab, var(--primary) 20%, transparent) 50%,
+    color-mix(in oklab, var(--primary) 9%, transparent) 55%,
+    transparent
+  );
+  animation: scan 4.5s linear infinite;
+}
+
+@keyframes scan {
+  0% {
+    top: -34%;
+  }
+  100% {
+    top: 104%;
+  }
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  93% {
+    opacity: 0.6;
+  }
+  94% {
+    opacity: 1;
+  }
+}
+
+.animate-flicker {
+  animation: flicker 5s infinite;
+}
+
+/* Sliding grid for map canvases */
+@keyframes grid-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 48px 48px;
+  }
+}
+
+.animate-grid-drift {
+  animation: grid-drift 14s linear infinite;
+}
+
+/* Custom scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--border) 90%, transparent) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--border) 80%, transparent);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Recharts overrides */
+.recharts-cartesian-grid line {
+  stroke: color-mix(in oklab, var(--border) 60%, transparent);
+}
+
+.recharts-tooltip-cursor {
+  fill: color-mix(in oklab, var(--accent) 45%, transparent);
+}

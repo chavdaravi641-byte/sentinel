@@ -1,0 +1,25 @@
+{
+  "model": "yolov12",
+  "backend": "sim",
+  "generation": 1,
+  "accelerator": "cpu",
+  "device_name": "cpu (AzureExecutionProvider)",
+  "providers": [
+    "CPUExecutionProvider"
+  ],
+  "image_width": 1280,
+  "image_height": 720,
+  "batch_size": 1,
+  "iterations": 5,
+  "frames_processed": 50,
+  "pre_ms_avg": 0.0001,
+  "infer_ms_avg": 0.0,
+  "post_ms_avg": 0.0001,
+  "total_ms_avg": 0.2512,
+  "fps": 3946.58,
+  "objects_per_second": 7893.17,
+  "objects_per_frame_avg": 2.0,
+  "run_ms": 12.7,
+  "ts": "2026-08-31T08:10:30.497840+00:00",
+  "timing_note": "deterministic sim backend: compute is sub-microsecond and does not reflect ONNX decode/forward latency"
+}

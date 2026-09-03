@@ -1,0 +1,24 @@
+{
+  "model": "yolov12",
+  "backend": "sim",
+  "generation": 1,
+  "accelerator": "cpu",
+  "device_name": "cpu (AzureExecutionProvider)",
+  "providers": [
+    "CPUExecutionProvider"
+  ],
+  "image_width": 1280,
+  "image_height": 720,
+  "batch_size": 1,
+  "iterations": 5,
+  "frames_processed": 50,
+  "pre_ms_avg": 0.0,
+  "infer_ms_avg": 0.0,
+  "post_ms_avg": 0.0,
+  "total_ms_avg": 0.008,
+  "fps": 111049.91,
+  "objects_per_second": 222099.82,
+  "objects_per_frame_avg": 2.0,
+  "run_ms": 0.5,
+  "ts": "2026-08-31T08:02:49.454717+00:00"
+}

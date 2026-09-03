@@ -1,0 +1,19 @@
+# Monorepo build context lives at the repository root (hosts the web + shared workspaces)
+**/node_modules
+**/__pycache__
+**/.next
+**/.git
+**/dist
+**/build
+apps/api
+.github
+.vscode
+.idea
+.env
+.env.*
+*.log
+postgres-data
+redis-data
+Makefile
+README.md
+docker-compose.yml

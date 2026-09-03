@@ -1,0 +1,149 @@
+name: sentinel-ai
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sentinel-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sentinel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentinel}
+      POSTGRES_DB: ${POSTGRES_DB:-sentinel}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sentinel} -d ${POSTGRES_DB:-sentinel}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sentinel-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: sentinel-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sentinel-net
+
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: sentinel-mediamtx
+    restart: unless-stopped
+    volumes:
+      - ./config/mediamtx.yml:/mediamtx.yml:ro
+    command: ["/mediamtx.yml"]
+    networks:
+      - sentinel-net
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: sentinel-api
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD:-sentinel}@postgres:5432/${POSTGRES_DB:-sentinel}
+      REDIS_URL: redis://redis:6379/0
+      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@sentinel.gp}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@2026}
+      CAMERA_TEST_TIMEOUT_SECONDS: ${CAMERA_TEST_TIMEOUT_SECONDS:-4}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000}
+      # --- Phase 2: media engine ---
+      MEDIA_ROOT: ${MEDIA_ROOT:-/media}
+      RECORDING_DIR: ${MEDIA_ROOT:-/media}/recordings
+      SNAPSHOT_DIR: ${MEDIA_ROOT:-/media}/snapshots
+      STREAM_MAX_CAMERAS: ${STREAM_MAX_CAMERAS:-16}
+      STREAM_ALLOW_TEST_SOURCES: ${STREAM_ALLOW_TEST_SOURCES:-true}
+      MEDIAMTX_BASE_URL: ${MEDIAMTX_BASE_URL:-http://mediamtx:8888}
+      MEDIAMTX_WHEP_URL: ${MEDIAMTX_WHEP_URL:-http://mediamtx:8889}
+      MEDIAMTX_RTSP_URL: ${MEDIAMTX_RTSP_URL:-rtsp://mediamtx:8554}
+      RECORDING_SCHEDULE_ENABLED: ${RECORDING_SCHEDULE_ENABLED:-false}
+      RECORDING_SCHEDULE: ${RECORDING_SCHEDULE:-}
+      MOTION_ENABLED: ${MOTION_ENABLED:-true}
+      ONVIF_PROBE_URLS: ${ONVIF_PROBE_URLS:-}
+      GPU_ACCELERATION: ${GPU_ACCELERATION:-auto}
+      # --- Phase 3: AI inference engine ---
+      # AI_WEIGHTS_DIR defaults to /media/ai/models inside the image.
+      # Host drops model weights under ./media/ai/models/yolov12/*.onnx
+      AI_WEIGHTS_DIR: ${AI_WEIGHTS_DIR:-/media/ai/models}
+      AI_ENABLED: ${AI_ENABLED:-true}
+      AI_ACCEL: ${AI_ACCEL:-auto}
+      AI_MODEL: ${AI_MODEL:-yolov12}
+      AI_STORE_ENABLED: ${AI_STORE_ENABLED:-true}
+      AI_ALERT_ENABLED: ${AI_ALERT_ENABLED:-true}
+      # --- Phase 4: ANPR & vehicle intelligence ---
+      ANPR_ENABLED: ${ANPR_ENABLED:-true}
+      ANPR_WEIGHTS_DIR: ${ANPR_WEIGHTS_DIR:-/media/ai/models/anpr}
+      ANPR_ACCEL: ${ANPR_ACCEL:-auto}
+      ANPR_INFER_FPS: ${ANPR_INFER_FPS:-5.0}
+      ANPR_PLATE_MIN_CONF: ${ANPR_PLATE_MIN_CONF:-0.35}
+      ANPR_OCR_MIN_CONF: ${ANPR_OCR_MIN_CONF:-0.55}
+      ANPR_OCR_BATCH_SIZE: ${ANPR_OCR_BATCH_SIZE:-8}
+      ANPR_STORE_ENABLED: ${ANPR_STORE_ENABLED:-true}
+      ANPR_EVIDENCE_ENABLED: ${ANPR_EVIDENCE_ENABLED:-true}
+      ANPR_EVIDENCE_DIR: ${ANPR_EVIDENCE_DIR:-/media/anpr/evidence}
+      ANPR_ALERT_ENABLED: ${ANPR_ALERT_ENABLED:-true}
+      ANPR_BLACKLIST_SYNC_SECONDS: ${ANPR_BLACKLIST_SYNC_SECONDS:-60}
+    volumes:
+      - media_data:/media
+      # Host-mounted weights dir (overrides the named media volume subtree).
+      - ./media/ai:/media/ai
+      # ANPR evidence persisted to the host under ./media/anpr.
+      - ./media/anpr:/media/anpr
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    networks:
+      - sentinel-net
+
+  web:
+    build:
+      # Build context is the repo root so the web workspace can consume
+      # @sentinel/shared and the root npm workspaces.
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Server-side rewrite target; NOT exposed to the browser.
+        API_BACKEND_URL: http://api:8000
+    container_name: sentinel-web
+    restart: unless-stopped
+    environment:
+      API_BACKEND_URL: http://api:8000
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+    networks:
+      - sentinel-net
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
+
+networks:
+  sentinel-net:
+    driver: bridge

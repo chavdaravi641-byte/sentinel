@@ -1,0 +1,355 @@
+{
+  "_metadata": {
+    "version": "1.0.0",
+    "last_updated": "2026-05-30",
+    "source": "Ministry of Road Transport and Highways, Government of India",
+    "description": "Official Gujarat RTO codes for license plate validation"
+  },
+  "valid_rto_codes": [
+    {
+      "code": "GJ01",
+      "district": "Ahmedabad",
+      "city": "Ahmedabad (West)",
+      "office_name": "RTO Ahmedabad West",
+      "jurisdiction": "Covers parts of Ahmedabad City on the western bank of the Sabarmati River, over Vejalpur, Sabarmati, Ghatlodiya and parts of Daskroi Taluks of Western Ahmedabad District",
+      "is_active": true
+    },
+    {
+      "code": "GJ02",
+      "district": "Mehsana",
+      "city": "Mehsana",
+      "office_name": "RTO Mehsana",
+      "jurisdiction": "Covers entire Mehsana District",
+      "is_active": true
+    },
+    {
+      "code": "GJ03",
+      "district": "Rajkot",
+      "city": "Rajkot",
+      "office_name": "RTO Rajkot",
+      "jurisdiction": "Covers entire Rajkot District",
+      "is_active": true
+    },
+    {
+      "code": "GJ04",
+      "district": "Bhavnagar",
+      "city": "Bhavnagar",
+      "office_name": "RTO Bhavnagar",
+      "jurisdiction": "Covers entire Bhavnagar District",
+      "is_active": true
+    },
+    {
+      "code": "GJ05",
+      "district": "Surat",
+      "city": "Surat",
+      "office_name": "RTO Surat",
+      "jurisdiction": "Covers Surat City, Olpad, Chorasi, Kamrej and Palsana Taluks of Western Surat District",
+      "is_active": true
+    },
+    {
+      "code": "GJ06",
+      "district": "Vadodara",
+      "city": "Vadodara",
+      "office_name": "RTO Vadodara",
+      "jurisdiction": "Covers entire Vadodara District",
+      "is_active": true
+    },
+    {
+      "code": "GJ07",
+      "district": "Kheda",
+      "city": "Nadiad",
+      "office_name": "RTO Nadiad",
+      "jurisdiction": "Covers entire Kheda District",
+      "is_active": true
+    },
+    {
+      "code": "GJ08",
+      "district": "Banaskantha",
+      "city": "Palanpur",
+      "office_name": "RTO Palanpur",
+      "jurisdiction": "Covers Banaskantha District and Vav-Tharad District",
+      "is_active": true
+    },
+    {
+      "code": "GJ09",
+      "district": "Sabarkantha",
+      "city": "Himmatnagar",
+      "office_name": "RTO Himmatnagar",
+      "jurisdiction": "Covers entire Sabarkantha District",
+      "is_active": true
+    },
+    {
+      "code": "GJ10",
+      "district": "Jamnagar",
+      "city": "Jamnagar",
+      "office_name": "RTO Jamnagar",
+      "jurisdiction": "Covers entire Jamnagar District",
+      "is_active": true
+    },
+    {
+      "code": "GJ11",
+      "district": "Junagadh",
+      "city": "Junagadh",
+      "office_name": "RTO Junagadh",
+      "jurisdiction": "Covers entire Junagadh District",
+      "is_active": true
+    },
+    {
+      "code": "GJ12",
+      "district": "Kutch",
+      "city": "Bhuj",
+      "office_name": "RTO Bhuj",
+      "jurisdiction": "Covers Bhuj, Mundra, Mandvi, Nakhtarana, Abdasa and Lakhpat Taluks of Western Kutch District",
+      "is_active": true
+    },
+    {
+      "code": "GJ13",
+      "district": "Surendranagar",
+      "city": "Surendranagar",
+      "office_name": "ARTO Surendranagar",
+      "jurisdiction": "Covers entire Surendranagar District",
+      "is_active": true
+    },
+    {
+      "code": "GJ14",
+      "district": "Amreli",
+      "city": "Amreli",
+      "office_name": "ARTO Amreli",
+      "jurisdiction": "Covers entire Amreli District",
+      "is_active": true
+    },
+    {
+      "code": "GJ15",
+      "district": "Valsad",
+      "city": "Valsad",
+      "office_name": "RTO Valsad",
+      "jurisdiction": "Covers entire Valsad District",
+      "is_active": true
+    },
+    {
+      "code": "GJ16",
+      "district": "Bharuch",
+      "city": "Bharuch",
+      "office_name": "ARTO Bharuch",
+      "jurisdiction": "Covers entire Bharuch District",
+      "is_active": true
+    },
+    {
+      "code": "GJ17",
+      "district": "Panchmahal",
+      "city": "Godhra",
+      "office_name": "RTO Godhra",
+      "jurisdiction": "Covers entire Panchmahal District",
+      "is_active": true
+    },
+    {
+      "code": "GJ18",
+      "district": "Gandhinagar",
+      "city": "Gandhinagar",
+      "office_name": "ARTO Gandhinagar",
+      "jurisdiction": "Covers entire Gandhinagar District",
+      "is_active": true
+    },
+    {
+      "code": "GJ19",
+      "district": "Surat",
+      "city": "Bardoli",
+      "office_name": "ARTO Bardoli",
+      "jurisdiction": "Covers Bardoli, Mahuva, Mandvi, Mangrol, Ambika, Areth and Umarpada Taluks of Eastern Surat District",
+      "is_active": true
+    },
+    {
+      "code": "GJ20",
+      "district": "Dahod",
+      "city": "Dahod",
+      "office_name": "ARTO Dahod",
+      "jurisdiction": "Covers entire Dahod District",
+      "is_active": true
+    },
+    {
+      "code": "GJ21",
+      "district": "Navsari",
+      "city": "Navsari",
+      "office_name": "ARTO Navsari",
+      "jurisdiction": "Covers entire Navsari District",
+      "is_active": true
+    },
+    {
+      "code": "GJ22",
+      "district": "Narmada",
+      "city": "Rajpipla",
+      "office_name": "ARTO Rajpipla",
+      "jurisdiction": "Covers entire Narmada District",
+      "is_active": true
+    },
+    {
+      "code": "GJ23",
+      "district": "Anand",
+      "city": "Anand",
+      "office_name": "ARTO Anand",
+      "jurisdiction": "Covers entire Anand District",
+      "is_active": true
+    },
+    {
+      "code": "GJ24",
+      "district": "Patan",
+      "city": "Patan",
+      "office_name": "ARTO Patan",
+      "jurisdiction": "Covers entire Patan District",
+      "is_active": true
+    },
+    {
+      "code": "GJ25",
+      "district": "Porbandar",
+      "city": "Porbandar",
+      "office_name": "ARTO Porbandar",
+      "jurisdiction": "Covers entire Porbandar District",
+      "is_active": true
+    },
+    {
+      "code": "GJ26",
+      "district": "Tapi",
+      "city": "Vyara",
+      "office_name": "ARTO Vyara",
+      "jurisdiction": "Covers entire Tapi District",
+      "is_active": true
+    },
+    {
+      "code": "GJ27",
+      "district": "Ahmedabad",
+      "city": "Ahmedabad (East)",
+      "office_name": "ARTO Ahmedabad East",
+      "jurisdiction": "Covers parts of Ahmedabad City on the eastern bank of the Sabarmati River, over Maninagar, Asarwa, Vatva and parts of Daskroi Taluks of Eastern Ahmedabad District",
+      "is_active": true
+    },
+    {
+      "code": "GJ28",
+      "district": "Surat",
+      "city": "Surat (West)",
+      "office_name": "ARTO Surat (Pal)",
+      "jurisdiction": "Reserved for Surat",
+      "is_active": true
+    },
+    {
+      "code": "GJ29",
+      "district": "Vadodara",
+      "city": "Vadodara (Rural)",
+      "office_name": "ARTO Vadodara (Darjipura)",
+      "jurisdiction": "Reserved for Vadodara",
+      "is_active": true
+    },
+    {
+      "code": "GJ30",
+      "district": "Dang",
+      "city": "Ahwa",
+      "office_name": "ARTO Ahwa",
+      "jurisdiction": "Covers entire Dang District",
+      "is_active": true
+    },
+    {
+      "code": "GJ31",
+      "district": "Aravalli",
+      "city": "Modasa",
+      "office_name": "ARTO Modasa",
+      "jurisdiction": "Covers entire Aravalli District",
+      "is_active": true
+    },
+    {
+      "code": "GJ32",
+      "district": "Gir Somnath",
+      "city": "Veraval",
+      "office_name": "ARTO Veraval",
+      "jurisdiction": "Covers entire Gir Somnath District",
+      "is_active": true
+    },
+    {
+      "code": "GJ33",
+      "district": "Botad",
+      "city": "Botad",
+      "office_name": "ARTO Botad",
+      "jurisdiction": "Covers entire Botad District",
+      "is_active": true
+    },
+    {
+      "code": "GJ34",
+      "district": "Chhota Udaipur",
+      "city": "Chhota Udaipur",
+      "office_name": "ARTO Chhota Udaipur",
+      "jurisdiction": "Covers entire Chhota Udaipur District",
+      "is_active": true
+    },
+    {
+      "code": "GJ35",
+      "district": "Mahisagar",
+      "city": "Lunawada",
+      "office_name": "ARTO Lunawada",
+      "jurisdiction": "Covers entire Mahisagar District",
+      "is_active": true
+    },
+    {
+      "code": "GJ36",
+      "district": "Morbi",
+      "city": "Morbi",
+      "office_name": "ARTO Morbi",
+      "jurisdiction": "Covers entire Morbi District",
+      "is_active": true
+    },
+    {
+      "code": "GJ37",
+      "district": "Devbhoomi Dwarka",
+      "city": "Khambhaliya",
+      "office_name": "ARTO Khambhaliya",
+      "jurisdiction": "Covers entire Devbhoomi Dwarka District",
+      "is_active": true
+    },
+    {
+      "code": "GJ38",
+      "district": "Ahmedabad",
+      "city": "Bavla",
+      "office_name": "ARTO Bavla",
+      "jurisdiction": "Covers Bavla, Sanand, Viramgam, Detroj-Rampura, Mandal, Dholka, Dhandhuka, Dholera and parts of Daskroi Taluks of Rural Ahmedabad District",
+      "is_active": true
+    },
+    {
+      "code": "GJ39",
+      "district": "Kutch",
+      "city": "Anjar",
+      "office_name": "ARTO Anjar",
+      "jurisdiction": "Covers Anjar, Gandhidham, Bhachau and Rapar Taluks of Eastern Kutch District",
+      "is_active": true
+    },
+    {
+      "code": "GJ40",
+      "district": "Vav-Tharad",
+      "city": "Tharad",
+      "office_name": "ARTO Tharad",
+      "jurisdiction": "Covers Vav-Tharad District, previously under GJ-08 (Palanpur)",
+      "is_active": true
+    }
+  ],
+  "inactive_codes": [
+    {
+      "code": "GJ28",
+      "district": "Surat",
+      "status": "Reserved",
+      "notes": "Reserved for Surat district"
+    }
+  ],
+  "state_info": {
+    "state_code": "GJ",
+    "state_name": "Gujarat",
+    "total_rto_codes": 40,
+    "active_codes": 40,
+    "plate_format": {
+      "standard": "INDIAN_STANDARD",
+      "pattern": "^[A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4}$",
+      "example": "GJ01AB1234",
+      "sections": {
+        "state_code": "GJ",
+        "rto_code": "01",
+        "series": "AB",
+        "number": "1234"
+      }
+    }
+  }
+}

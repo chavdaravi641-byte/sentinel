@@ -1,0 +1,32 @@
+# Sentinel AI edge media server (MediaMTX) configuration.
+#
+# Serves as the HLS + WebRTC fan-out for the Phase 2 streaming engine.
+# The API's per-camera ffmpeg ingest publishes RTSP here; browsers consume
+# HLS/MJPEG through the FastAPI proxy and WebRTC through the WHEP relay.
+
+logLevel: info
+
+# RTSP ingest (API -> mediamtx)
+rtsp: true
+rtspAddress: :8554
+
+# HLS out (mediamtx -> API proxy -> browser)
+hls: true
+hlsAddress: :8888
+# Always remux so the first playlist request is instant (no on-demand delay).
+hlsAlwaysRemux: yes
+# MPEG-TS delivers .ts segments that proxy cleanly through FastAPI and play
+# in any hls.js player without fmp4/LL-HLS edge cases.
+hlsVariant: mpegts
+# Deep window so live-edge players (hls.js/Safari) never chase an evicted
+# segment on startup or after a stall.
+hlsSegmentCount: 15
+hlsSegmentDuration: 1s
+
+# WebRTC out (WHEP over HTTP; browser connects directly to mediamtx ICE)
+webrtc: true
+webrtcAddress: :8889
+
+# Path defaults: accept any publisher/reader without credentials (internal net).
+paths:
+  all_others:

@@ -1,0 +1,20 @@
+{
+  "name": "sentinel-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sentinel AI - Gujarat Police CCTV Intelligence Platform (Monorepo)",
+  "workspaces": [
+    "apps/web",
+    "packages/shared"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev:web": "npm run dev --workspace=@sentinel/web",
+    "build:web": "npm run build --workspace=@sentinel/web",
+    "lint:web": "npm run lint --workspace=@sentinel/web",
+    "typecheck:web": "npm run typecheck --workspace=@sentinel/web",
+    "build:shared": "npm run build --workspace=@sentinel/shared"
+  }
+}
