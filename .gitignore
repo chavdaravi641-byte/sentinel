@@ -50,3 +50,7 @@ redis-data/
 dist/
 build/
 *.tsbuildinfo
+
+# Adhoc verification & generated benchmarks
+verify_system.py
+media/ai/benchmarks/
