@@ -195,4 +195,60 @@ export const endpoints = {
   iamSessions: "/api/v1/iam/sessions",
   iamSessionRevoke: (id: string) => `/api/v1/iam/sessions/${id}/revoke`,
   iamSessionsRevokeAll: "/api/v1/iam/sessions/revoke-all",
+  // --- Watchlists ---
+  watchlists: "/api/v1/watchlists",
+  watchlist: (id: string) => `/api/v1/watchlists/${id}`,
+  watchlistStats: "/api/v1/watchlists/stats",
+  watchlistLookup: (plate: string) => `/api/v1/watchlists/lookup/${encodeURIComponent(plate)}`,
+  // --- Vehicle Intelligence ---
+  vehicleIntelSearch: "/api/v1/vehicle-intel/investigate",
+  vehicleIntelRoute: "/api/v1/vehicle-intel/route/reconstruct",
+  vehicleIntelTimeline: "/api/v1/vehicle-intel/timeline",
+  vehicleIntelIdentity: "/api/v1/vehicle-intel/identity",
+  // --- Phase 7 killer features: forensics + interception ---
+  vehicleDossier: (plate: string) =>
+    `/api/v1/vehicles/${encodeURIComponent(plate)}/dossier`,
+  vehicleDossierVerify: (plate: string) =>
+    `/api/v1/vehicles/${encodeURIComponent(plate)}/dossier/verify`,
+  vehicleInterception: (plate: string) =>
+    `/api/v1/vehicles/${encodeURIComponent(plate)}/interception`,
 };
+
+/**
+ * Download a forensic dossier (PDF or Markdown) as a browser file download.
+ * Returns the integrity hash reported by the server so callers can display
+ * the court-admissible SHA-256 alongside the saved artifact.
+ */
+export async function downloadDossier(
+  plate: string,
+  format: "pdf" | "markdown" = "pdf",
+): Promise<string | null> {
+  const auth = tokenStore.get();
+  const headers: Record<string, string> = {};
+  if (auth) headers.authorization = `Bearer ${auth}`;
+
+  const res = await fetch(endpoints.vehicleDossier(plate) + `?format=${format}`, {
+    headers,
+    credentials: "same-origin",
+  });
+  if (!res.ok) {
+    const err = new ApiError(
+      res.status,
+      `Dossier export failed with status ${res.status}.`,
+    );
+    throw err;
+  }
+
+  const integrity = res.headers.get("x-dossier-integrity");
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const ext = format === "pdf" ? "pdf" : "md";
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `dossier_${plate.replace(/[^A-Za-z0-9]/g, "")}.${ext}`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  return integrity;
+}

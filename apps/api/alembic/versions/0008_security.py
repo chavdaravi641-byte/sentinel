@@ -1,7 +1,7 @@
 """phase 6.2 security: core-auth hardening tables + additive session columns
 
 Revision ID: 0008
-Revises: 0007
+Revises: 0006
 Create Date: 2026-09-01 00:00:00.000000
 
 Additive only. New tables (user_security, password_history, login_attempts,
@@ -9,6 +9,11 @@ mfa_recovery_codes, trusted_devices, security_events, security_threats) plus a
 handful of nullable columns on refresh_tokens for device fingerprinting. All
 new NOT NULL columns carry server defaults so existing rows migrate with zero
 data loss and no change to Phase 1..6 behaviour.
+
+Note: revision 0007 (fed IAM) was removed from the migration chain -- the
+federation schema (fed_*) is owned by FederationBase.metadata.create_all at
+runtime (src/federation/db.py), not alembic. This migration therefore revises
+0006 directly.
 """
 
 from typing import Sequence, Union
@@ -19,7 +24,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "0008"
-down_revision: Union[str, None] = "0007"
+down_revision: Union[str, None] = "0006"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

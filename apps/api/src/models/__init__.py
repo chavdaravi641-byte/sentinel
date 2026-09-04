@@ -43,6 +43,7 @@ from src.models.security import (
 from src.models.stream import Recording, Stream
 from src.models.user import User
 from src.models.vehicle_intel import CameraGraphEdge, VehicleIdentity, VehicleSighting
+from src.models.watchlist import Watchlist, WatchlistCategory, WatchlistSourceDB, WatchlistTargetType
 
 __all__ = [
     "AccessRole",
@@ -83,4 +84,8 @@ __all__ = [
     "UserSecurity",
     "VehicleIdentity",
     "VehicleSighting",
+    "Watchlist",
+    "WatchlistCategory",
+    "WatchlistSourceDB",
+    "WatchlistTargetType",
 ]

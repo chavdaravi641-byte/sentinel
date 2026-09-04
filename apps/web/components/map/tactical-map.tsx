@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { CameraGeoPoint } from "@sentinel/shared";
-import { Navigation } from "lucide-react";
+import type { CameraGeoPoint, InterceptionVector } from "@sentinel/shared";
+import { Navigation, Target } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { statusMeta } from "@/lib/status";
@@ -13,6 +13,7 @@ interface TacticalMapProps {
   points: Point[];
   className?: string;
   interactive?: boolean;
+  corridor?: InterceptionVector | null;
 }
 
 const W = 1000;
@@ -36,8 +37,8 @@ function project(points: Point[]) {
     minLng = Math.min(minLng, p.longitude);
     maxLng = Math.max(maxLng, p.longitude);
   }
-  const latSpan = Math.max(maxLat - minLat, 0.15);
-  const lngSpan = Math.max(maxLng - minLng, 0.15);
+  const latSpan = Math.max((maxLat - minLat) * 1.12, 0.2);
+  const lngSpan = Math.max((maxLng - minLng) * 1.12, 0.2);
 
   const x = (lng: number) =>
     PAD + ((lng - minLng) / lngSpan) * (W - PAD * 2);
@@ -55,6 +56,7 @@ export function TacticalMap({
   points,
   className,
   interactive = true,
+  corridor = null,
 }: TacticalMapProps) {
   const [hover, setHover] = useState<Point | null>(null);
   const projection = useMemo(() => project(points), [points]);
@@ -110,6 +112,21 @@ export function TacticalMap({
         preserveAspectRatio="xMidYMid meet"
         className="h-full w-full text-border"
       >
+        <defs>
+          <filter
+            id="corridor-glow"
+            x="-50%"
+            y="-50%"
+            width="200%"
+            height="200%"
+          >
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
         <rect width={W} height={H} fill="transparent" />
         {gridLines()}
 
@@ -124,6 +141,35 @@ export function TacticalMap({
           strokeOpacity={0.12}
           strokeDasharray="4 6"
         />
+
+        {/* Predicted Interception Corridor (killer feature #2) */}
+        {corridor && corridor.nodes.length > 1 && (
+          <g className="interception-corridor">
+            <polyline
+              points={corridor.nodes
+                .map((n) => `${x(n.longitude)},${y(n.latitude)}`)
+                .join(" ")}
+              fill="none"
+              stroke="#ffdd00"
+              strokeWidth={14}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              opacity={0.16}
+            />
+            <polyline
+              points={corridor.nodes
+                .map((n) => `${x(n.longitude)},${y(n.latitude)}`)
+                .join(" ")}
+              fill="none"
+              stroke="#ffdd00"
+              strokeWidth={3.5}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              strokeDasharray="2 6"
+              style={{ filter: "url(#corridor-glow)" }}
+            />
+          </g>
+        )}
 
         {points.map((p) => {
           const px = x(p.longitude);
@@ -175,6 +221,43 @@ export function TacticalMap({
             </g>
           );
         })}
+
+        {/* Corridor target markers (ranked interception nodes) */}
+        {corridor &&
+          corridor.nodes.map((n) => {
+            const nx = x(n.longitude);
+            const ny = y(n.latitude);
+            return (
+              <g
+                key={n.camera_id}
+                transform={`translate(${nx}, ${ny})`}
+                className="corridor-node"
+              >
+                <circle
+                  r={13}
+                  fill="none"
+                  stroke="#ffdd00"
+                  strokeWidth={2}
+                  strokeOpacity={0.9}
+                  className="radar-pulse origin-center"
+                />
+                <circle r={8} fill="#ffdd00" opacity={0.12} />
+                <circle r={3.5} fill="#ffdd00" stroke="#04070d" strokeWidth={1.5} />
+                <text
+                  y={-18}
+                  textAnchor="middle"
+                  className="fill-[#ffdd00]"
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    fontFamily: "var(--font-mono)",
+                  }}
+                >
+                  {n.rank}
+                </text>
+              </g>
+            );
+          })}
       </svg>
 
       {/* HUD chrome */}
@@ -182,6 +265,14 @@ export function TacticalMap({
         <Navigation className="h-3.5 w-3.5 text-primary" />
         STATE GRID · GUJARAT
       </div>
+      {corridor && corridor.nodes.length > 0 && (
+        <div className="pointer-events-none absolute left-3 top-10 flex items-center gap-2 rounded border border-[#ffdd00]/50 bg-[#0d0c00]/80 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#ffdd00] backdrop-blur">
+          <Target className="h-3.5 w-3.5" />
+          Interception corridor · {corridor.nodes.length} node
+          {corridor.nodes.length > 1 ? "s" : ""} · basis {corridor.basis} ·{" "}
+          {Math.round(corridor.confidence * 100)}%
+        </div>
+      )}
       <div className="pointer-events-none absolute right-3 top-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
         LAT {bounds.minLat.toFixed(2)}–{bounds.maxLat.toFixed(2)} · LON{" "}
         {bounds.minLng.toFixed(2)}–{bounds.maxLng.toFixed(2)}

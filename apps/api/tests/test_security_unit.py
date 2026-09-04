@@ -92,8 +92,13 @@ def test_secret_diag_missing_is_critical():
     assert any(i.kind == "missing" for i in diag.issues)
 
 
-def test_secret_diag_unsafe_default_flags_compute():
+def test_secret_diag_unsafe_default_flags_compute(monkeypatch):
     # "secret" is in _UNSAFE_VALUES and production disallows unsafe defaults.
+    # Force a production context so the classification asserts the critical
+    # path regardless of the environment the test suite runs in (the dev
+    # environment intentionally downgrades unsafe defaults to a warning).
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    monkeypatch.setattr(settings, "SECRET_ALLOW_UNSAFE_DEFAULT", False)
     diag = secrets_security._classify("SECRET_KEY", "secret", expected_set=True)
     assert diag.level == "critical"
     assert any(i.kind == "unsafe_default" for i in diag.issues)

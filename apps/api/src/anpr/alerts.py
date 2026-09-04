@@ -146,9 +146,12 @@ class AnprAlertEngine:
                 event.ocr_confidence,
             )
 
-        # Update recency.
+        # Update recency. Store both the global last-seen stamp (for the
+        # reappearance rule) and a per-camera stamp (for the multi-camera rule,
+        # which queries `{norm}:{camera_id}`).
         self._last_seen[norm] = event.camera_id
         self._last_seen_ts[norm] = now_mono
+        self._last_seen_ts[f"{norm}:{event.camera_id}"] = now_mono
         return fired
 
     def reset(self) -> None:

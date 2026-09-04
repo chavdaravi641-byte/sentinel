@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /** Build a query string from a record, dropping undefined/null/empty values. */
 export function qs(
-  params: Record<string, string | number | undefined | null>,
+  params: Record<string, string | number | boolean | undefined | null>,
 ): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -19,9 +19,9 @@ export function qs(
 }
 
 /** Format a UTC ISO timestamp for the local console (DD MMM YYYY HH:MM:SS). */
-export function formatDateTime(iso: string | null | undefined): string {
+export function formatDateTime(iso: string | Date | null | undefined): string {
   if (!iso) return "—";
-  const d = new Date(iso);
+  const d = iso instanceof Date ? iso : new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
   const pad = (n: number) => String(n).padStart(2, "0");
   const months = [

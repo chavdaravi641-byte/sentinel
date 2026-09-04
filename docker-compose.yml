@@ -2,7 +2,7 @@ name: sentinel-ai
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgis/postgis:16-3.4-alpine
     container_name: sentinel-postgres
     restart: unless-stopped
     environment:
@@ -61,6 +61,7 @@ services:
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD:-sentinel}@postgres:5432/${POSTGRES_DB:-sentinel}
+      FED_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD:-sentinel}@postgres:5432/${POSTGRES_DB:-sentinel}
       REDIS_URL: redis://redis:6379/0
       SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@sentinel.gp}

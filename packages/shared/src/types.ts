@@ -553,3 +553,192 @@ export interface InferenceBenchmark {
   ts: string;
   report_file: string | null;
 }
+
+/* ---------------------------------------------------------------------------
+ * Watchlists
+ * ------------------------------------------------------------------------- */
+
+// Type aliases are defined canonically in ./constants and re-exported from
+// ./index. Here we import them (aliased) only for use inside this file's
+// interfaces so there is no double-export collision in index.ts.
+import type {
+  WatchlistCategory as _WatchlistCategory,
+  WatchlistSourceDB as _WatchlistSourceDB,
+  WatchlistTargetType as _WatchlistTargetType,
+} from "./constants";
+
+type WatchlistTargetType = _WatchlistTargetType;
+type WatchlistCategory = _WatchlistCategory;
+type WatchlistSourceDB = _WatchlistSourceDB;
+
+export interface Watchlist {
+  id: string;
+  target_type: WatchlistTargetType;
+  identifier_number: string;
+  category: WatchlistCategory;
+  source_db: WatchlistSourceDB;
+  notes: string | null;
+  active: boolean;
+  added_by: string | null;
+  added_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WatchlistCreate {
+  target_type: WatchlistTargetType;
+  identifier_number: string;
+  category: WatchlistCategory;
+  source_db: WatchlistSourceDB;
+  notes?: string | null;
+  active?: boolean;
+}
+
+export interface WatchlistUpdate {
+  target_type?: WatchlistTargetType;
+  identifier_number?: string;
+  category?: WatchlistCategory;
+  source_db?: WatchlistSourceDB;
+  notes?: string | null;
+  active?: boolean;
+}
+
+export interface WatchlistStats {
+  total: number;
+  active: number;
+  inactive: number;
+  by_type: Record<string, number>;
+  by_category: Record<string, number>;
+  by_source: Record<string, number>;
+}
+
+/* ---------------------------------------------------------------------------
+ * Vehicle Route Reconstruction
+ * ------------------------------------------------------------------------- */
+
+export interface RouteSighting {
+  id: string;
+  camera_id: string;
+  camera_name: string | null;
+  latitude: number;
+  longitude: number;
+  plate: string;
+  normalized_plate: string;
+  ocr_confidence: number;
+  detection_confidence: number;
+  vehicle_type: string | null;
+  color: string | null;
+  make: string | null;
+  model: string | null;
+  ts: string;
+}
+
+export interface VehicleRoute {
+  plate: string;
+  sightings: RouteSighting[];
+  total_sightings: number;
+  first_seen: string;
+  last_seen: string;
+  cameras_visited: number;
+}
+
+/* ---------------------------------------------------------------------------
+ * Forensic Evidence Dossier (killer feature #1)
+ * ------------------------------------------------------------------------- */
+
+export interface DossierWatchlist {
+  matched: boolean;
+  target_type?: string | null;
+  category?: string | null;
+  source_db?: string | null;
+  notes?: string | null;
+  active?: boolean | null;
+  added_at?: string | null;
+}
+
+export interface DossierSighting {
+  detection_id: string;
+  camera_id: string;
+  cctv_code: string | null;
+  camera_name: string | null;
+  location: string | null;
+  district_code: string | null;
+  department_code: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  ts: string;
+  ocr_confidence: number;
+  detection_confidence: number;
+  vehicle_type: string | null;
+  color: string | null;
+  make: string | null;
+  model: string | null;
+  state_code: string | null;
+  rto_code: string | null;
+}
+
+export interface DossierSummary {
+  sightings: number;
+  distinct_cameras: number;
+  distinct_departments: number;
+  distinct_districts: number;
+}
+
+export interface ForensicDossier {
+  plate: string;
+  normalized_plate: string;
+  version: string;
+  schema: string;
+  generated_at: string;
+  integrity_sha256: string;
+  source: string;
+  watchlist: DossierWatchlist | null;
+  summary: DossierSummary;
+  sightings: DossierSighting[];
+}
+
+export interface DossierVerify {
+  plate: string;
+  integrity_sha256: string;
+  valid: boolean;
+}
+
+/* ---------------------------------------------------------------------------
+ * Predictive Interception Corridor (killer feature #2)
+ * ------------------------------------------------------------------------- */
+
+export interface InterceptionNode {
+  camera_id: string;
+  camera_name: string;
+  location: string;
+  latitude: number;
+  longitude: number;
+  rank: number;
+  road_distance_km: number;
+  travel_time_minutes: number;
+  eta_utc: string;
+  window_start_utc: string;
+  window_end_utc: string;
+  is_junction: boolean;
+  corridor_path: string[];
+}
+
+export interface InterceptionVector {
+  plate: string;
+  trigger_camera: string;
+  assumed_speed_kph: number;
+  radius_km: number;
+  observed_ts: string;
+  basis: string;
+  confidence: number;
+  recommendation: string;
+  nodes: InterceptionNode[];
+}
+
+export interface InterceptionRequest {
+  plate: string;
+  trigger_camera: string;
+  observed_ts?: number;
+  speed_kph?: number;
+  radius_km?: number;
+}

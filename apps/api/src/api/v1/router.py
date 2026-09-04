@@ -16,6 +16,8 @@ from src.api.v1.endpoints import (
     security,
     streams,
     vehicle_intel,
+    vehicles,
+    watchlist,
 )
 from src.api.v1.ws import router as ws_router
 
@@ -36,6 +38,8 @@ api_router.include_router(vehicle_intel.router, prefix="/vehicle-intel", tags=["
 api_router.include_router(copilot.router, prefix="/copilot", tags=["copilot"])
 api_router.include_router(registry.router, prefix="/registry", tags=["registry", "gis"])
 api_router.include_router(security.router, prefix="/security", tags=["security"])
+api_router.include_router(watchlist.router, prefix="/watchlists", tags=["watchlists"])
+api_router.include_router(vehicles.router, prefix="/vehicles", tags=["vehicles", "forensics"])
 api_router.include_router(ws_router, tags=["inference"])
 api_router.include_router(iam_router, tags=["iam"])
 api_router.include_router(cluster_router, tags=["cluster"])

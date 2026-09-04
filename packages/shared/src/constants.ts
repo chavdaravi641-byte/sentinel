@@ -116,5 +116,65 @@ export const SENTINEL_CLASSES = [
 export type SentinelClass = (typeof SENTINEL_CLASSES)[number];
 
 export const INFERENCE_WS_PATH = "/api/v1/ws/inference";
+export const ANPR_WS_PATH = "/api/v1/ws/anpr";
 
 export const CLIENT_VERSION = "1.0.0";
+
+/* ---------------------------------------------------------------------------
+ * Watchlists
+ * ------------------------------------------------------------------------- */
+
+export const WATCHLIST_TARGET_TYPE = {
+  VEHICLE: "vehicle",
+  PERSON: "person",
+} as const;
+
+export type WatchlistTargetType =
+  (typeof WATCHLIST_TARGET_TYPE)[keyof typeof WATCHLIST_TARGET_TYPE];
+
+export const WATCHLIST_CATEGORY = {
+  STOLEN_VEHICLE: "stolen_vehicle",
+  WANTED: "wanted",
+  MISSING: "missing",
+  UNINSURED: "uninsured",
+  BLACKLISTED: "blacklisted",
+  SUSPECT: "suspect",
+  OTHER: "other",
+} as const;
+
+export type WatchlistCategory =
+  (typeof WATCHLIST_CATEGORY)[keyof typeof WATCHLIST_CATEGORY];
+
+export const WATCHLIST_SOURCE_DB = {
+  VAHAN: "vahan",
+  EGUJCOP: "egujcop",
+  SARTHI: "sarthi",
+  INTERNAL: "internal",
+  MANUAL: "manual",
+} as const;
+
+export type WatchlistSourceDB =
+  (typeof WATCHLIST_SOURCE_DB)[keyof typeof WATCHLIST_SOURCE_DB];
+
+export const WATCHLIST_CATEGORY_LABELS: Record<WatchlistCategory, string> = {
+  stolen_vehicle: "Stolen Vehicle",
+  wanted: "Wanted",
+  missing: "Missing",
+  uninsured: "Uninsured",
+  blacklisted: "Blacklisted",
+  suspect: "Suspect",
+  other: "Other",
+};
+
+export const WATCHLIST_SOURCE_LABELS: Record<WatchlistSourceDB, string> = {
+  vahan: "VAHAN",
+  egujcop: "eGujCop",
+  sarthi: "SARTHI",
+  internal: "Internal",
+  manual: "Manual",
+};
+
+export const WATCHLIST_TARGET_LABELS: Record<WatchlistTargetType, string> = {
+  vehicle: "Vehicle",
+  person: "Person",
+};

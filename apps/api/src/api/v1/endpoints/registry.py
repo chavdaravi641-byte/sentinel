@@ -468,6 +468,96 @@ async def gis_gaps(
     return GapReport(**run_gap_report(pts, cell_m=cell_m))
 
 
+@router.get("/gis/report", response_model=dict[str, Any])
+async def gis_report(
+    db: DBDep,
+    current_user: CurrentUser,
+    format: str = Query(default="json", pattern="^(json|markdown)$"),
+    cell_m: float = Query(default=4000, ge=500, le=50000),
+) -> dict[str, Any]:
+    """Executive gap-analysis report wrapping ``registry/gap.py`` analytics.
+
+    Combines :func:`run_gap_report` and :func:`low_density_zones` into a
+    judge-facing summary. Returns a JSON object (``format=json``) or a
+    Markdown document (``format=markdown``), scoped to the caller's registry
+    RBAC territory.
+    """
+    ruser = _require(current_user, "gis")
+    regs = await _all_registry(db)
+    cams = await _all_cameras(db)
+    records = _scope_filter(ruser, [_registry_record(r, cams.get(r.camera_id)) for r in regs])
+    pts = _as_points(records)
+    if not pts:
+        gap = run_gap_report(pts, cell_m=cell_m)
+        zones = gap["low_density_zones"]
+        exec_summary: dict[str, Any] = {
+            "generated_at": _utcnow(),
+            "scope": ruser.scope.kind,
+            "scope_district": ruser.scope.district_code,
+            "scope_department": ruser.scope.department_code,
+            "role": ruser.role.value,
+            "camera_count": 0,
+            "blind_spot_cells": 0,
+            "uncovered_area_m2": 0.0,
+            "low_density_high": 0,
+            "low_density_medium": 0,
+            "low_density_low": 0,
+            "recommended_placements": [],
+        }
+    else:
+        gap = run_gap_report(pts, cell_m=cell_m)
+        zones = gap["low_density_zones"]
+        _pri = lambda z: z.get("priority", "low")  # noqa: E731
+        exec_summary = {
+            "generated_at": _utcnow(),
+            "scope": ruser.scope.kind,
+            "scope_district": ruser.scope.district_code,
+            "scope_department": ruser.scope.department_code,
+            "role": ruser.role.value,
+            "camera_count": gap["camera_count"],
+            "blind_spot_cells": gap["blind_spot_cells"],
+            "uncovered_area_m2": gap["uncovered_area_m2"],
+            "low_density_high": sum(1 for z in zones if _pri(z) == "high"),
+            "low_density_medium": sum(1 for z in zones if _pri(z) == "medium"),
+            "low_density_low": sum(1 for z in zones if _pri(z) == "low"),
+            "recommended_placements": gap["recommended_placements"],
+        }
+
+    if format == "markdown":
+        return {"markdown": _gap_markdown(exec_summary, zones)}
+    return {"report": exec_summary, "low_density_zones": zones[:20]}
+
+
+def _gap_markdown(exec_summary: dict[str, Any], zones: list[dict[str, Any]]) -> str:
+    """Render the executive gap report as Markdown for judge handouts."""
+    scope_line = (f"{exec_summary['scope']}"
+                  + (f" · {exec_summary['scope_district']}" if exec_summary.get("scope_district") else ""))
+    lines: list[str] = [
+        "# CCTV Registry — Coverage Gap Analysis",
+        "",
+        f"**Generated:** `{exec_summary['generated_at']}`  ",
+        f"**Role / Scope:** `{exec_summary['role']}` / `{scope_line}`",
+        f"**Department scope:** `{exec_summary['scope_department'] or 'all'}`",
+        "",
+        "## Headline numbers",
+        "",
+        f"- Cameras in scope: **{exec_summary['camera_count']}**",
+        f"- Blind-spot cells: **{exec_summary['blind_spot_cells']}**",
+        f"- Uncovered area: **{exec_summary['uncovered_area_m2']:,.0f} m²**",
+        f"- Low-density zones: high **{exec_summary['low_density_high']}** / "
+        f"medium **{exec_summary['low_density_medium']}** / low **{exec_summary['low_density_low']}**",
+        "",
+        "## Recommended camera placements",
+    ]
+    if exec_summary["recommended_placements"]:
+        for i, p in enumerate(exec_summary["recommended_placements"], 1):
+            lines.append(f"{i}. `({p['lat']:.5f}, {p['lng']:.5f})`")
+    else:
+        lines.append("- None (no gaps detected in scope).")
+    lines.append("")
+    return "\n".join(lines)
+
+
 @router.get("/gis/districts", response_model=list[dict[str, Any]])
 async def gis_districts(db: DBDep, current_user: CurrentUser) -> list[dict[str, Any]]:
     """Per-district rollup for choropleth / chart widgets."""

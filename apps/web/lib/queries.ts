@@ -34,6 +34,10 @@ import type {
   InferenceDetection,
   InferenceRun,
   InferenceSummary,
+  ForensicDossier,
+  DossierVerify,
+  InterceptionVector,
+  InterceptionRequest,
 } from "@sentinel/shared";
 import { api, endpoints } from "./api";
 import { qs } from "./utils";
@@ -478,5 +482,186 @@ export function useInferenceBenchmark() {
       qc.invalidateQueries({ queryKey: ["inference", "models"] });
       qc.invalidateQueries({ queryKey: ["inference", "config"] });
     },
+  });
+}
+
+/* ---------------------------------------------------------------------------
+ * Watchlists
+ * ------------------------------------------------------------------------- */
+
+import type {
+  Watchlist,
+  WatchlistCreate,
+  WatchlistUpdate,
+  WatchlistStats,
+} from "@sentinel/shared";
+
+export function useWatchlists(params?: {
+  target_type?: string;
+  category?: string;
+  source_db?: string;
+  active_only?: boolean;
+  search?: string;
+  page?: number;
+  page_size?: number;
+}) {
+  return useQuery({
+    queryKey: ["watchlists", params],
+    queryFn: () => {
+      const q = qs(params ?? {});
+      return api.get<Paginated<Watchlist>>(
+        `${endpoints.watchlists}${q ? `?${q}` : ""}`,
+      );
+    },
+  });
+}
+
+export function useWatchlist(id: string) {
+  return useQuery({
+    queryKey: ["watchlists", id],
+    queryFn: () => api.get<Watchlist>(endpoints.watchlist(id)),
+    enabled: !!id,
+  });
+}
+
+export function useWatchlistStats() {
+  return useQuery({
+    queryKey: ["watchlists", "stats"],
+    queryFn: () => api.get<WatchlistStats>(endpoints.watchlistStats),
+    refetchInterval: 60_000,
+  });
+}
+
+export function useCreateWatchlist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: WatchlistCreate) =>
+      api.post<Watchlist>(endpoints.watchlists, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["watchlists"] }),
+  });
+}
+
+export function useUpdateWatchlist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: WatchlistUpdate & { id: string }) =>
+      api.patch<Watchlist>(endpoints.watchlist(id), body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["watchlists"] }),
+  });
+}
+
+export function useDeleteWatchlist() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.delete<{ message: string }>(endpoints.watchlist(id)),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["watchlists"] }),
+  });
+}
+
+/* ---------------------------------------------------------------------------
+ * Vehicle Route Reconstruction
+ * ------------------------------------------------------------------------- */
+
+export interface InvestigateResponse {
+  vehicle_uuid: string | null;
+  matches: Array<{
+    vehicle_uuid: string;
+    camera_id: string;
+    camera_name: string;
+    location: string;
+    plate: string;
+    appearance: Record<string, unknown>;
+    ocr_confidence: number;
+    ts: number;
+    score: number;
+  }>;
+  timeline: {
+    segments: Array<{
+      vehicle_uuid: string;
+      from: Record<string, unknown>;
+      to: Record<string, unknown>;
+      distance_km: number;
+      travel_time_minutes: number;
+      confidence: number;
+      evidence_strength: string;
+    }>;
+  } | null;
+  route_summary: {
+    vehicle_uuid: string;
+    ordered_stops: Array<{
+      camera_id: string;
+      camera_name: string;
+      lat: number | null;
+      lng: number | null;
+      ts: number;
+      plate: string;
+      confidence: number;
+    }>;
+    total_distance_km: number;
+    total_travel_time_minutes: number;
+    confidence: number;
+  } | null;
+  message?: string;
+}
+
+export function useVehicleInvestigate(
+  plate: string,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ["vehicle-investigate", plate],
+    queryFn: () =>
+      api.post<InvestigateResponse>(endpoints.vehicleIntelSearch, { plate }),
+    enabled: enabled && !!plate && plate.length >= 6,
+    retry: false,
+  });
+}
+
+/* ---------------------------------------------------------------------------
+ * Forensic Evidence Dossier
+ * ------------------------------------------------------------------------- */
+
+export function useVehicleDossier(plate: string, enabled = true) {
+  return useQuery({
+    queryKey: ["vehicle-dossier", plate],
+    queryFn: () =>
+      api.get<ForensicDossier>(endpoints.vehicleDossier(plate) + "?format=json"),
+    enabled: enabled && !!plate && plate.length >= 6,
+    retry: false,
+  });
+}
+
+export function useVehicleDossierVerify(plate: string, enabled = true) {
+  return useQuery({
+    queryKey: ["vehicle-dossier-verify", plate],
+    queryFn: () =>
+      api.get<DossierVerify>(endpoints.vehicleDossierVerify(plate)),
+    enabled: enabled && !!plate && plate.length >= 6,
+    retry: false,
+  });
+}
+
+export function useVehicleInterception(
+  plate: string,
+  triggerCamera: string | null,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ["vehicle-interception", plate, triggerCamera],
+    queryFn: () =>
+      api.post<InterceptionVector>(
+        endpoints.vehicleInterception(plate),
+        { plate, trigger_camera: triggerCamera, radius_km: 15, speed_kph: 40 },
+      ),
+    enabled: enabled && !!plate && !!triggerCamera && plate.length >= 6,
+    retry: false,
+  });
+}
+
+export function useVehicleInterceptionMutation() {
+  return useMutation({
+    mutationFn: (body: InterceptionRequest) =>
+      api.post<InterceptionVector>(endpoints.vehicleInterception(body.plate), body),
   });
 }
