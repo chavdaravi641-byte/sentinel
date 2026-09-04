@@ -236,6 +236,25 @@ export default function VehicleRoutesPage() {
                   </div>
                 );
               })()}
+
+              {dossier.data && (
+                <div className="mt-2 border-t border-border/50 pt-2">
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Evidence Dossier
+                  </p>
+                  <p className="mt-1 font-mono text-[10px] text-success">
+                    {dossier.data.summary.sightings} sighting
+                    {dossier.data.summary.sightings === 1 ? "" : "s"} ·{" "}
+                    {dossier.data.summary.distinct_departments} dept
+                    {dossier.data.summary.distinct_departments === 1 ? "" : "s"}{" "}
+                    · {dossier.data.summary.distinct_districts} district
+                    {dossier.data.summary.distinct_districts === 1 ? "" : "s"}
+                  </p>
+                  <p className="mt-0.5 truncate font-mono text-[9px] text-muted-foreground">
+                    SHA-256 {dossier.data.integrity_sha256.slice(0, 24)}…
+                  </p>
+                </div>
+              )}
             </Panel>
 
             <Panel

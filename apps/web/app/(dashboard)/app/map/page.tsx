@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Layers, RefreshCw } from "lucide-react";
+import { Layers, Radar, RefreshCw, Target } from "lucide-react";
 import type { CameraGeoPoint, CameraStatus } from "@sentinel/shared";
 import { CAMERA_STATUS } from "@sentinel/shared";
 
@@ -9,9 +9,10 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Panel } from "@/components/layout/panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TacticalMap } from "@/components/map/tactical-map";
-import { useCameras } from "@/lib/queries";
+import { useCameras, useVehicleInterception } from "@/lib/queries";
 import { statusMeta } from "@/lib/status";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +28,28 @@ export default function MapPage() {
   const { data, isLoading, refetch, isFetching } = useCameras({
     pageSize: 250,
   });
+
+  const [plateInput, setPlateInput] = useState("");
+  const [plate, setPlate] = useState("");
+  const [triggerCamera, setTriggerCamera] = useState<string | null>(null);
+
+  const interception = useVehicleInterception(
+    plate,
+    triggerCamera,
+    !!plate && !!triggerCamera,
+  );
+
+  function handleTrace() {
+    const normalized = plateInput.trim().toUpperCase().replace(/\s+/g, "");
+    if (normalized.length < 6) return;
+    setPlate(normalized);
+    setTriggerCamera(null);
+  }
+
+  function toggleCamera(camId?: string) {
+    if (!camId) return;
+    setTriggerCamera((cur) => (cur === camId ? null : camId));
+  }
 
   const points: CameraGeoPoint[] = useMemo(
     () =>
@@ -91,6 +114,80 @@ export default function MapPage() {
           right={<Layers className="h-4 w-4 text-primary" />}
           bodyClassName="p-3"
         >
+          <div className="mb-3 rounded-md border border-[#ffdd00]/40 bg-[#0d0c00]/60 p-2.5">
+            <p className="mb-1.5 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[#ffdd00]">
+              <Radar className="h-3.5 w-3.5" /> Interception Vector
+            </p>
+            <Input
+              value={plateInput}
+              onChange={(e) => setPlateInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleTrace()}
+              placeholder="Plate (e.g. GJ01AB1234)"
+              className="h-8 pl-2 font-mono uppercase"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleTrace}
+              disabled={plateInput.trim().length < 6}
+              className="mt-2 h-7 w-full font-mono text-[10px] uppercase tracking-widest"
+            >
+              <Target className="h-3 w-3 text-[#ffdd00]" /> Compute Corridor
+            </Button>
+            {plate && (
+              <p className="mt-1.5 truncate font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                Plate <span className="text-[#ffdd00]">{plate}</span>
+                {triggerCamera ? " · trigger armed" : " · click a camera to arm trigger"}
+              </p>
+            )}
+            {interception.isFetching && (
+              <p className="mt-1 animate-pulse font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                Predicting corridor…
+              </p>
+            )}
+            {interception.data?.nodes.length ? (
+              <p className="mt-1 font-mono text-[9px] uppercase tracking-widest text-[#ffdd00]">
+                {interception.data.nodes.length} node
+                {interception.data.nodes.length > 1 ? "s" : ""} ·{" "}
+                {Math.round(interception.data.confidence * 100)}%
+              </p>
+            ) : null}
+          </div>
+
+          {plate && (
+            <div className="mb-3">
+              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Trigger Camera
+              </p>
+              <div className="grid grid-cols-1 gap-1">
+                {(data?.items ?? []).slice(0, 8).map((c) => {
+                  const selected = triggerCamera === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => toggleCamera(c.id)}
+                      className={cn(
+                        "flex items-center gap-2 rounded border px-2 py-1.5 text-left font-mono text-[10px] transition-colors",
+                        selected
+                          ? "border-[#ffdd00]/60 bg-[#ffdd00]/10 text-[#ffdd00]"
+                          : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "h-1.5 w-1.5 shrink-0 rounded-full",
+                          statusMeta.camera[c.status].dot,
+                        )}
+                      />
+                      <span className="truncate">{c.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <ul className="space-y-2">
             {STATUS_OPTIONS.map((o) => {
               const meta = statusMeta.camera[o.value];
