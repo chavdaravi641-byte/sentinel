@@ -45,6 +45,11 @@ services:
     volumes:
       - ./config/mediamtx.yml:/mediamtx.yml:ro
     command: ["/mediamtx.yml"]
+    ports:
+      - "8554:8554"
+      - "8322:8322"
+      - "8888:8888"
+      - "8889:8889"
     networks:
       - sentinel-net
 

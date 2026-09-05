@@ -2,6 +2,7 @@
 
 import { AppShell } from "@/components/layout/app-shell";
 import { AnprWatchlistAlert } from "@/components/alerts/anpr-watchlist-alert";
+import { SimulationBanner } from "@/components/layout/simulation-banner";
 
 export default function AuthedLayout({
   children,
@@ -10,6 +11,7 @@ export default function AuthedLayout({
 }) {
   return (
     <AppShell>
+      <SimulationBanner />
       <AnprWatchlistAlert />
       {children}
     </AppShell>

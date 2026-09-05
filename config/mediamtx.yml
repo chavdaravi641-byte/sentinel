@@ -10,22 +10,24 @@ logLevel: info
 rtsp: true
 rtspAddress: :8554
 
-# HLS out (mediamtx -> API proxy -> browser)
+# HLS out (mediamtx -> API proxy -> browser) — low latency fmp4
 hls: true
 hlsAddress: :8888
-# Always remux so the first playlist request is instant (no on-demand delay).
 hlsAlwaysRemux: yes
-# MPEG-TS delivers .ts segments that proxy cleanly through FastAPI and play
-# in any hls.js player without fmp4/LL-HLS edge cases.
-hlsVariant: mpegts
-# Deep window so live-edge players (hls.js/Safari) never chase an evicted
-# segment on startup or after a stall.
-hlsSegmentCount: 15
+hlsVariant: fmp4
+hlsPartDuration: 200ms
+hlsSegmentCount: 7
 hlsSegmentDuration: 1s
 
-# WebRTC out (WHEP over HTTP; browser connects directly to mediamtx ICE)
+# RTSPS (TLS ingest for remote cameras)
+rtspsAddress: :8322
+rtspEncryption: optional
+
+# WebRTC out (WHEP) with ICE for NAT traversal
 webrtc: true
 webrtcAddress: :8889
+webrtcICEServers:
+  - url: stun:stun.l.google.com:19302
 
 # Path defaults: accept any publisher/reader without credentials (internal net).
 paths:
