@@ -21,6 +21,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import UUID4
 
+from src.api.deps import StaffUser
 from src.cluster.schemas import (
     CameraAssignIn,
     CameraLeaseOut,
@@ -40,14 +41,14 @@ router = APIRouter(prefix="/cluster", tags=["cluster"])
 
 
 @router.get("/nodes", response_model=list[NodeOut])
-async def list_nodes():
+async def list_nodes(_user: StaffUser):
     """Part 1 & 4 -- active node registry."""
     svc = get_service()
     return [n.to_dict() for n in svc.store.nodes()]
 
 
 @router.get("/nodes/{node_id}", response_model=NodeOut)
-async def get_node(node_id: str):
+async def get_node(node_id: str, _user: StaffUser):
     svc = get_service()
     node = svc.store.node(node_id)
     if node is None:
@@ -56,13 +57,14 @@ async def get_node(node_id: str):
 
 
 @router.get("/health", response_model=HealthSummaryOut)
-async def cluster_health():
+async def cluster_health(_user: StaffUser):
     """Part 7 -- cluster health summary."""
     return get_service().store.health_summary()
 
 
 @router.get("/cameras", response_model=list[CameraLeaseOut])
 async def list_cameras(
+    _user: StaffUser,
     node_id: str | None = Query(default=None, description="Filter by owning node"),
 ):
     """Part 2 -- camera ownership registry."""
@@ -74,7 +76,7 @@ async def list_cameras(
 
 
 @router.get("/cameras/{camera_id}", response_model=CameraLeaseOut)
-async def get_camera(camera_id: UUID4):
+async def get_camera(camera_id: UUID4, _user: StaffUser):
     svc = get_service()
     lease = svc.store.lease(uuid.UUID(str(camera_id)))
     if lease is None:
@@ -83,7 +85,7 @@ async def get_camera(camera_id: UUID4):
 
 
 @router.post("/register", response_model=NodeOut, status_code=201)
-async def register_node(payload: NodeRegisterIn):
+async def register_node(payload: NodeRegisterIn, _user: StaffUser):
     """Parts 1 & 4 -- a node joins (or re-joins) the cluster."""
     svc = get_service()
     node = await svc.store.register(
@@ -102,7 +104,7 @@ async def register_node(payload: NodeRegisterIn):
 
 
 @router.post("/heartbeat", response_model=HeartbeatOut)
-async def heartbeat(payload: HeartbeatIn):
+async def heartbeat(payload: HeartbeatIn, _user: StaffUser):
     """Part 3 -- receive a node heartbeat; trigger pending failover."""
     svc = get_service()
     node = await svc.store.heartbeat(
@@ -128,7 +130,7 @@ async def heartbeat(payload: HeartbeatIn):
 # Additive helpers
 # ---------------------------------------------------------------------------
 @router.post("/cameras/assign", response_model=CameraLeaseOut)
-async def assign_camera(payload: CameraAssignIn):
+async def assign_camera(payload: CameraAssignIn, _user: StaffUser):
     """Part 6 -- schedule a camera to a node (or let the scheduler pick)."""
     svc = get_service()
     if payload.owner_node_id is None:
@@ -145,7 +147,7 @@ async def assign_camera(payload: CameraAssignIn):
 
 
 @router.post("/cameras/{camera_id}/lease", response_model=CameraLeaseOut)
-async def renew_lease(camera_id: UUID4, payload: CameraRenewIn):
+async def renew_lease(camera_id: UUID4, payload: CameraRenewIn, _user: StaffUser):
     """Part 2 -- lease renewal (split-brain-safe CAS)."""
     svc = get_service()
     lease = await svc.store.renew_lease(
@@ -163,6 +165,7 @@ async def renew_lease(camera_id: UUID4, payload: CameraRenewIn):
 
 @router.post("/failover", response_model=FailoverOut)
 async def failover(
+    _user: StaffUser,
     camera_id: UUID4 | None = Query(default=None),
     force_node_id: str | None = Query(default=None),
 ):
@@ -179,12 +182,12 @@ async def failover(
 
 
 @router.get("/ownership", response_model=list[OwnershipChangeOut])
-async def ownership_log(limit: int = Query(default=100, le=1000)):
+async def ownership_log(_user: StaffUser, limit: int = Query(default=100, le=1000)):
     return get_service().store.changes(limit=limit)
 
 
 @router.get("/dashboard", response_model=DashboardOut)
-async def dashboard():
+async def dashboard(_user: StaffUser):
     """Part 7 -- health dashboard payload (nodes, heartbeats, capacity)."""
     svc = get_service()
     store = svc.store

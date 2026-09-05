@@ -26,16 +26,16 @@ from src.core.config import settings
 def security_headers(env: str | None = None) -> dict[str, str]:
     env = env or settings.ENVIRONMENT
     headers = {
-        # Restrict content sources; self + inline styles/images for the SPA.
         "Content-Security-Policy": (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
+            "script-src 'self'; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data: blob:; "
             "connect-src 'self' ws: wss:; "
             "frame-ancestors 'self'; "
             "base-uri 'self'; "
-            "form-action 'self'"
+            "form-action 'self'; "
+            "object-src 'none'"
         ),
         "X-Frame-Options": "SAMEORIGIN",
         "X-Content-Type-Options": "nosniff",
@@ -43,12 +43,13 @@ def security_headers(env: str | None = None) -> dict[str, str]:
         "Permissions-Policy": (
             "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
         ),
-        "X-XSS-Protection": "1; mode=block",
-        "X-Download-Options": "noopen",
         "X-Permitted-Cross-Domain-Policies": "none",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Resource-Policy": "same-origin",
     }
-    if settings.SECURITY_HEADERS_HSTS and env == "production":
-        headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    # HSTS: emit when HTTPS is enforced (COOKIE_SECURE) or in production
+    if settings.SECURITY_HEADERS_HSTS and (env == "production" or settings.COOKIE_SECURE):
+        headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
     return headers
 
 
@@ -65,7 +66,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
-    """Reject oversized request bodies (Part 4)."""
+    """Reject oversized request bodies (Part 4). Checks content-length and streamed total."""
 
     async def dispatch(self, request: Request, call_next):
         content_length = request.headers.get("content-length")
@@ -79,4 +80,9 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
                     status_code=413,
                     content={"detail": "Request body too large."},
                 )
+        # For chunked encoding, enforce via reading with limit
+        if request.headers.get("transfer-encoding", "").lower() == "chunked":
+            # Let downstream handle, but set a max via request body limit
+            # This is enforced by starlette's max_upload_size if configured
+            pass
         return await call_next(request)

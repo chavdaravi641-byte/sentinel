@@ -13,8 +13,10 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from src.api.deps import get_current_user
 from src.cluster.router import router
 from src.cluster.service import ClusterService, get_service, get_store
+from src.models.user import User, UserRole
 
 
 @pytest.fixture
@@ -30,8 +32,19 @@ def client(monkeypatch):
     monkeypatch.setattr("src.cluster.service._SERVICE", svc, raising=False)
     monkeypatch.setattr("src.cluster.service._STORE", store, raising=False)
 
+    async def _mock_user():
+        return User(
+            id=uuid.uuid4(),
+            email="test@sentinel.gp",
+            full_name="Test Staff",
+            role=UserRole.ADMIN,
+            password_hash="x",
+            is_active=True,
+        )
+
     app = FastAPI()
     app.include_router(router)
+    app.dependency_overrides[get_current_user] = _mock_user
     return TestClient(app), store
 
 

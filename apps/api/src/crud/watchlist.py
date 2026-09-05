@@ -79,8 +79,9 @@ async def list_watchlists(
         stmt = stmt.where(Watchlist.active.is_(True))
         count_stmt = count_stmt.where(Watchlist.active.is_(True))
     if search:
-        like = f"%{search.strip().lower()}%"
-        cond = Watchlist.identifier_number.ilike(like) | Watchlist.notes.ilike(like)
+        escaped = search.strip().lower().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        like = f"%{escaped}%"
+        cond = Watchlist.identifier_number.ilike(like, escape="\\") | Watchlist.notes.ilike(like, escape="\\")
         stmt = stmt.where(cond)
         count_stmt = count_stmt.where(cond)
 

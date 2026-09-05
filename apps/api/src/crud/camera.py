@@ -51,8 +51,9 @@ async def list_cameras(
         stmt = stmt.where(Camera.status == status)
         count_stmt = count_stmt.where(Camera.status == status)
     if search:
-        like = f"%{search.strip().lower()}%"
-        cond = Camera.name.ilike(like) | Camera.location.ilike(like)
+        escaped = search.strip().lower().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        like = f"%{escaped}%"
+        cond = Camera.name.ilike(like, escape="\\") | Camera.location.ilike(like, escape="\\")
         stmt = stmt.where(cond)
         count_stmt = count_stmt.where(cond)
 

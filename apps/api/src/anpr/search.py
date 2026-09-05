@@ -54,8 +54,9 @@ class SearchEngine:
         if plate:
             stmt = stmt.where(PlateDetection.normalized_plate == normalize_plate(plate).upper())
         if partial:
-            like = f"%{normalize_plate(partial)}%"
-            stmt = stmt.where(PlateDetection.normalized_plate.like(like))
+            escaped = normalize_plate(partial).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            like = f"%{escaped}%"
+            stmt = stmt.where(PlateDetection.normalized_plate.like(like, escape="\\"))
         if state:
             stmt = stmt.where(PlateDetection.state_code == state.upper())
         if color:
@@ -63,16 +64,19 @@ class SearchEngine:
         if vehicle_type:
             stmt = stmt.where(PlateDetection.vehicle_type == vehicle_type.lower())
         if make:
-            stmt = stmt.where(PlateDetection.make.ilike(f"%{make}%"))
+            escaped = make.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            stmt = stmt.where(PlateDetection.make.ilike(f"%{escaped}%", escape="\\"))
         if model:
-            stmt = stmt.where(PlateDetection.model.ilike(f"%{model}%"))
+            escaped = model.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            stmt = stmt.where(PlateDetection.model.ilike(f"%{escaped}%", escape="\\"))
         if camera_id:
             stmt = stmt.where(PlateDetection.camera_id == UUID(str(camera_id)))
         if camera_name:
+            escaped = camera_name.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
             stmt = stmt.where(
                 or_(
-                    PlateDetection.camera_name.ilike(f"%{camera_name}%"),
-                    PlateDetection.location.ilike(f"%{camera_name}%"),
+                    PlateDetection.camera_name.ilike(f"%{escaped}%", escape="\\"),
+                    PlateDetection.location.ilike(f"%{escaped}%", escape="\\"),
                 )
             )
         if start:

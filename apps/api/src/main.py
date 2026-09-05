@@ -108,15 +108,15 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Request-ID", "X-Dossier-Integrity"],
 )
 
-# Phase 6.2 additive hardening middleware.
+# Phase 6.2 additive hardening middleware - order matters: outermost first
+app.add_middleware(ObservabilityMiddleware)
+app.add_middleware(RequestSizeLimitMiddleware)
 if settings.SECURITY_HEADERS_ENABLED:
     app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(RequestSizeLimitMiddleware)
-app.add_middleware(ObservabilityMiddleware)
 
 
 @app.middleware("http")
