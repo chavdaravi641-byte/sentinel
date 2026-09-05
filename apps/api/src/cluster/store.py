@@ -190,8 +190,10 @@ class ClusterStore:
         self.backend = backend
         self._nodes: dict[str, ClusterNode] = {}
         self._leases: dict[uuid.UUID, CameraLease] = {}
-        self._changes: list[OwnershipChange] = []
-        self._heartbeat_log: list[dict[str, Any]] = []
+        from collections import deque
+
+        self._changes: deque[OwnershipChange] = deque(maxlen=1000)
+        self._heartbeat_log: deque[dict[str, Any]] = deque(maxlen=2000)
         # cache so scheduler reads O(1) node list without allocation churn
         self._schedulable_cache: list[ClusterNode] = []
 
@@ -226,7 +228,10 @@ class ClusterStore:
             ok = await self.backend.update_node_cas(
                 node.node_id, expected_generation=expected, values=node_row_values(node)
             )
-        except Exception:
+        except Exception as exc:  # durability hiccup is best-effort, but log
+            from src.core.logging import log
+
+            log.warning("cluster.persist_node_failed", node_id=node.node_id, error=str(exc))
             return
         if not ok:
             # a concurrent writer bumped the row first; adopt the newer gen
@@ -239,8 +244,10 @@ class ClusterStore:
 
         try:
             await self.backend.insert_node(node.node_id, node_row_values(node))
-        except Exception:
-            pass
+        except Exception as exc:
+            from src.core.logging import log
+
+            log.warning("cluster.persist_new_node_failed", node_id=node.node_id, error=str(exc))
 
     async def _persist_camera(self, lease: CameraLease) -> bool:
         """CAS write-through of an ownership mutation. Returns True on success,

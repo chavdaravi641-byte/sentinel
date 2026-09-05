@@ -42,6 +42,8 @@ const DEMO_CREDENTIALS = {
   password: "Admin@2026",
 };
 
+const SHOW_DEMO_CREDENTIALS = process.env.NEXT_PUBLIC_ENVIRONMENT !== "production";
+
 export function LoginScreen() {
   const router = useRouter();
   const { status, login } = useAuth();
@@ -190,14 +192,16 @@ export function LoginScreen() {
 
           <Separator className="my-4" />
 
-          <div className="rounded border border-border/80 bg-muted/40 px-3 py-2.5">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Demo operator credentials
-            </p>
-            <p className="mt-1 font-mono text-[11px] text-cyan-300">
-              {DEMO_CREDENTIALS.email} · {DEMO_CREDENTIALS.password}
-            </p>
-          </div>
+          {SHOW_DEMO_CREDENTIALS && (
+            <div className="rounded border border-border/80 bg-muted/40 px-3 py-2.5">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Demo operator credentials
+              </p>
+              <p className="mt-1 font-mono text-[11px] text-cyan-300">
+                {DEMO_CREDENTIALS.email} · {DEMO_CREDENTIALS.password}
+              </p>
+            </div>
+          )}
         </div>
 
         <p className="mt-6 flex items-center justify-center gap-1.5 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground/70">
