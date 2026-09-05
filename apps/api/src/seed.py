@@ -183,13 +183,27 @@ DISTRICT_META: dict[str, tuple[str, str, str]] = {
 }
 
 
+VENDOR_CATALOG: list[tuple[str, str, str, str]] = [
+    ("Hikvision", "DS-2CD-2XXX", "v5.5.61", "HIK"),
+    ("Dahua", "IPC-HFW-3441", "v2.82", "DAH"),
+    ("Axis", "P3267-V", "11.11", "AXIS"),
+    ("Bosch", "DINION 6000i", "v7.3", "BOSCH"),
+    ("Hanwha", "XNV-6080R", "v2.21", "HAN"),
+    ("CP Plus", "CP-UNC-TA30L3", "v4.1", "CPP"),
+    ("ONVIF", "Profile-S", "v1.0", "ONVIF"),
+]
+
+
 async def seed_registry(db, cameras_by_index: dict[int, Camera],
-                        admin: User | None) -> bool:
+                         admin: User | None) -> bool:
     """Populate the global camera_registry from the seeded cameras (idempotent).
 
     Each camera gets a global CCTV code, ownership scoping (state/district/
     department/board) and GIS metadata so the coverage / gap analysis layers
     return meaningful data out of the box.
+
+    Vendor diversity: cycles through 7 vendor profiles (Hikvision/Dahua/Axis/
+    Bosch/Hanwha/CP Plus/ONVIF) to demonstrate heterogeneous onboarding.
     """
     if await _exists(db, CameraRegistry):
         return False
@@ -206,17 +220,18 @@ async def seed_registry(db, cameras_by_index: dict[int, Camera],
             if idx % 4 == 0
             else CameraCategory.CITY if idx % 2 == 0 else CameraCategory.HIGHWAY
         )
+        make, model, fw, vendor_id = VENDOR_CATALOG[idx % len(VENDOR_CATALOG)] if cam.name != "TEST-LAVFI-01" else ("Lavfi", "testsrc2", "sim", "LAVFI")
         db.add(
             CameraRegistry(
                 camera_id=cam.id,
                 cctv_code=f"IN-GJ-{district_code}-{cam.name}",
                 serial_number=f"SN-{cam.name}",
-                make="Hikvision",
-                model="DS-2CD-2XXX",
-                firmware="v5.5.61",
+                make=make,
+                model=model,
+                firmware=fw,
                 category=category,
-                ip_address=cam.rtsp_url.split("@")[-1].split(":")[0] if cam.rtsp_url else None,
-                vendor_id="HIK",
+                ip_address=cam.rtsp_url.split("@")[-1].split(":")[0] if cam.rtsp_url and "@" in cam.rtsp_url else (cam.rtsp_url.split("://")[-1].split(":")[0].split("/")[0] if cam.rtsp_url else None),
+                vendor_id=vendor_id,
                 ownership_type=OwnershipType.STATE,
                 state_code="GJ",
                 district_code=district_code,
@@ -291,11 +306,25 @@ async def seed_cameras(db) -> tuple[list[Camera], dict[int, Camera]]:
 
     cameras: list[Camera] = []
     for idx, (name, location, lat, lng, status, host) in enumerate(DEMO_CAMERAS):
-        rtsp = (
-            host
-            if host.startswith("lavfi://")
-            else f"rtsp://admin:sentinel@{host}:554/streaming/channels/1"
-        )
+        if host.startswith("lavfi://"):
+            rtsp = host
+        else:
+            # Vendor-specific RTSP path demonstrates heterogeneous VMS/URL conventions.
+            _, _, _, vendor_id = VENDOR_CATALOG[idx % len(VENDOR_CATALOG)]
+            if vendor_id == "HIK":
+                rtsp = f"rtsp://admin:sentinel@{host}:554/Streaming/Channels/101"
+            elif vendor_id == "DAH":
+                rtsp = f"rtsp://admin:sentinel@{host}:554/cam/realmonitor?channel=1&subtype=0"
+            elif vendor_id == "AXIS":
+                rtsp = f"rtsp://{host}:554/axis-media/media.amp"
+            elif vendor_id == "BOSCH":
+                rtsp = f"rtsp://{host}:554/rtsp_tunnel"
+            elif vendor_id == "HAN":
+                rtsp = f"rtsp://{host}:554/profile0"
+            elif vendor_id == "CPP":
+                rtsp = f"rtsp://admin:sentinel@{host}:554/live/ch0"
+            else:  # ONVIF
+                rtsp = f"rtsp://{host}:554/onvif1"
         cam = Camera(
             name=name,
             rtsp_url=rtsp,
