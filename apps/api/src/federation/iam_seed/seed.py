@@ -184,10 +184,28 @@ async def seed(db: AsyncSession, *, with_admin: bool = True) -> dict[str, int]:
     total_codes = len(permissions)
     newly_inserted = 0
     if permissions:
-        values = [
-            {"id": p.id, "code": p.code, "resource": p.resource, "action": p.action, "scope": p.scope}
-            for p in permissions
-        ]
+        # Future-proof: build row dict from table columns, not manual list.
+        # If a new NOT NULL column (e.g., tenant_id) is added without default, this will fail fast
+        # instead of silently inserting NULL and raising NotNullViolation at runtime.
+        values = []
+        for p in permissions:
+            row = {}
+            for col in Permission.__table__.columns:
+                if col.name in ("created_at", "updated_at"):
+                    continue
+                val = getattr(p, col.name, None)
+                if val is None:
+                    if col.default is not None or col.server_default is not None:
+                        continue
+                    if not col.nullable:
+                        if col.name == "id":
+                            val = uuid.uuid4()
+                        else:
+                            raise ValueError(f"Missing required NOT NULL column '{col.name}' for Permission code={p.code!r}")
+                    else:
+                        continue
+                row[col.name] = val
+            values.append(row)
         stmt = (
             pg_insert(Permission)
             .values(values)
