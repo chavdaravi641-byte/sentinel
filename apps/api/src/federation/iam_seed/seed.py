@@ -195,9 +195,12 @@ async def seed(db: AsyncSession, *, with_admin: bool = True) -> dict[str, int]:
                     continue
                 val = getattr(p, col.name, None)
                 if val is None:
-                    if col.default is not None or col.server_default is not None:
+                    # Python default must be materialized for bulk INSERT; server_default is handled by DB
+                    if col.default is not None and getattr(col.default, "is_scalar", False):
+                        val = col.default.arg
+                    elif col.server_default is not None:
                         continue
-                    if not col.nullable:
+                    elif not col.nullable:
                         if col.name == "id":
                             val = uuid.uuid4()
                         else:
