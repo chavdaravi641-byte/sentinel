@@ -176,19 +176,51 @@ async def seed(db: AsyncSession, *, with_admin: bool = True) -> dict[str, int]:
             counts["departments"] += 1
     await db.flush()
 
-    existing_perm = set(
-        (await db.execute(select(Permission.code))).scalars().all()
-    )
+    # Atomic PostgreSQL-native idempotent insert — safe for concurrent startups
+    from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+    existing_before = set((await db.execute(select(Permission.code))).scalars().all())
     permissions = build_default_roles()[2]
-    perm_by_code: dict[str, Permission] = {}
-    for p in permissions:
-        if p.code not in existing_perm:
-            db.add(p)
-            counts["permissions"] += 1
-        else:
-            db.add(p)  # ensure in session
-        perm_by_code[p.code] = p
-    await db.flush()
+    total_codes = len(permissions)
+    newly_inserted = 0
+    if permissions:
+        values = [
+            {"id": p.id, "code": p.code, "resource": p.resource, "action": p.action, "scope": p.scope}
+            for p in permissions
+        ]
+        stmt = (
+            pg_insert(Permission)
+            .values(values)
+            .on_conflict_do_nothing(index_elements=[Permission.code])
+            .returning(Permission.code)
+        )
+        result = await db.execute(stmt)
+        await db.flush()
+        try:
+            newly_inserted = len(set(result.scalars().all()))
+        except Exception:
+            try:
+                newly_inserted = int(result.rowcount) if result.rowcount not in (None, -1) else 0
+            except Exception:
+                newly_inserted = 0
+
+    # Reload actual persisted objects — never rely on pre-INSERT in-memory instances
+    perm_rows = (await db.execute(select(Permission))).scalars().all()
+    perm_by_code: dict[str, Permission] = {p.code: p for p in perm_rows}
+    skipped = total_codes - newly_inserted
+    counts["permissions"] = newly_inserted
+
+    try:
+        from src.core.logging import log
+
+        log.info(
+            "iam.seed.permissions",
+            existing=len(existing_before),
+            newly_inserted=newly_inserted,
+            skipped=skipped,
+        )
+    except Exception:
+        pass
 
     existing_role = set((await db.execute(select(Role.code))).scalars().all())
     roles, _, _ = build_default_roles()
