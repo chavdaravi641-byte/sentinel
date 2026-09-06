@@ -8,6 +8,7 @@ import { Panel } from "@/components/layout/panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { IamEmptyState } from "@/components/iam/empty-state";
 import { endpoints } from "@/lib/api";
 import { useIamList } from "@/lib/iam-hooks";
 import { cn } from "@/lib/utils";
@@ -104,6 +105,11 @@ export default function IamAuditPage() {
             <div className="flex items-center gap-2 p-6 font-mono text-xs text-muted-foreground">
               <Loader2 className="animate-spin" /> Loading audit trail…
             </div>
+          ) : filtered.length === 0 ? (
+            <IamEmptyState
+              title="No audit events"
+              description={applied ? "No events match the current action filter." : "No IAM events have been recorded yet."}
+            />
           ) : (
             <table className="w-full text-left text-sm">
               <thead>

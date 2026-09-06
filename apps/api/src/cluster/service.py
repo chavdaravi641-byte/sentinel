@@ -23,6 +23,7 @@ from typing import Any
 
 from src.cluster.config import settings
 from src.cluster.store import ClusterStore
+from src.core.logging import log
 
 _STORE: ClusterStore | None = None
 _SERVICE: "ClusterService | None" = None
@@ -70,7 +71,8 @@ async def install_durable_cluster() -> bool:
             _STORE = store
             _SERVICE = ClusterService(store)
         return True
-    except Exception:
+    except Exception as exc:
+        log.warning("cluster.install_durable_failed", error=str(exc), exc_info=True)
         return False
 
 
@@ -120,14 +122,14 @@ class ClusterService:
         interval = settings.FAILOVER_CHECK_INTERVAL_SECONDS
         while True:
             try:
-                offline = await self.store.reconcile()
+                await self.store.reconcile()
                 transfers = await self.store.failover_sweep()
                 if transfers:
                     self._failover_count += len(transfers)
             except asyncio.CancelledError:
                 raise
-            except Exception:
-                pass
+            except Exception as exc:
+                log.error("cluster.maintenance_failed", error=str(exc), exc_info=True)
             await asyncio.sleep(interval)
 
     # ------------------------------------------------------------------ #

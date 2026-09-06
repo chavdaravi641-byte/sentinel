@@ -22,7 +22,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from src.cluster.config import settings
-from src.cluster.store import ClusterStore, NodeStatus
+from src.cluster.store import ClusterStore
 
 UTC = timezone.utc
 
@@ -42,7 +42,6 @@ class VirtualClock:
 
 def make_nodes(n: int, seed: int) -> list[dict[str, Any]]:
     """Deterministic fixtures for ``n`` nodes scattered across regions/districts."""
-    rng = random.Random(seed)
     regions = ["Gujarat", "Maharashtra", "Rajasthan", "Karnataka", "Tamil Nadu"]
     districts = ["AHM", "GNR", "SRT", "VDR", "RAJ", "BHV", "JAM", "POR", "JUN"]
     nodes = []
@@ -111,8 +110,11 @@ async def _failover(store: ClusterStore, clock: VirtualClock,
     Non-victim nodes keep heartbeating (mirrors reality) so only the victim is
     treated as OFFLINE. Returns (wall-clock transfer seconds, transfer records).
     """
-    victims_cameras = [l.camera_id for l in store.owned_cameras(victim_node_id)
-                       if l.owner_node_id == victim_node_id]
+    victims_cameras = [
+        lease.camera_id
+        for lease in store.owned_cameras(victim_node_id)
+        if lease.owner_node_id == victim_node_id
+    ]
     n_expected = len(victims_cameras)
     await store.deregister(victim_node_id)
     # advance past the victim's renewed-lease deadline so its cameras are eligible
@@ -162,7 +164,7 @@ async def run_node_scale(n_nodes: int, seed: int = 1337) -> dict[str, Any]:
 
     # 3) Scheduling (assign the sample cameras)
     sched_total_ms = (await _assign(store, camera_ids[:schedule_sample])) * 1000
-    scheduled = len([l for l in store.leases() if l.owner_node_id])
+    scheduled = len([lease for lease in store.leases() if lease.owner_node_id])
     sched_per_camera_ms = sched_total_ms / max(1, scheduled)
 
     # 4) Pure scheduler-decision latency
@@ -256,11 +258,9 @@ async def run_durability_validation(tmpdir: str | None = None) -> dict[str, Any]
         async_sessionmaker,
         create_async_engine,
     )
-    from sqlalchemy import update
 
     from src.cluster.db import ClusterBase
     from src.cluster.durable import DurableClusterBackend
-    from src.cluster.models import ClusterCamera
 
     def _factory():
         if tmpdir is None:
@@ -287,7 +287,7 @@ async def run_durability_validation(tmpdir: str | None = None) -> dict[str, Any]
     start = time.perf_counter()
     await store.recover()
     restart_persist_ms = (time.perf_counter() - start) * 1000
-    cam_ids = {str(l.camera_id): l.owner_node_id for l in store.leases()}
+    cam_ids = {str(lease.camera_id): lease.owner_node_id for lease in store.leases()}
     ownership_persisted = all(owner == "node-a" for owner in cam_ids.values()) and len(cam_ids) == 5
     nodes_recovered = {n.node_id for n in store.nodes()} == {"node-a", "node-b"}
     await eng.dispose()
@@ -302,7 +302,6 @@ async def run_durability_validation(tmpdir: str | None = None) -> dict[str, Any]
     await store2.deregister("node-a", graceful=False)
     await store2._persist_node(store2.node("node-a"))
     # age every lease so they are expired for a fresh process
-    from datetime import timedelta
     for c in cameras:
         await backend2.update_camera_cas(
             c,
@@ -341,7 +340,9 @@ async def run_durability_validation(tmpdir: str | None = None) -> dict[str, Any]
     bf = DurableClusterBackend(maker_final)
     sf = ClusterStore(backend=bf)
     await sf.recover()
-    final_owner_ids = {str(l.camera_id): l.owner_node_id for l in sf.leases()}
+    final_owner_ids = {
+        str(lease.camera_id): lease.owner_node_id for lease in sf.leases()
+    }
     awaited_cameras = set(str(c) for c in cameras)
     single_owner = {
         cid: ow for cid, ow in final_owner_ids.items() if cid in awaited_cameras

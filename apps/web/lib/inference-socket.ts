@@ -21,9 +21,13 @@ export interface InferenceSocket {
 function wsUrl(token: string): string {
   // Use NEXT_PUBLIC_API_URL if set, otherwise derive from current host.
   // This respects next.config.ts proxy and avoids hardcoding :8000 behind reverse proxy.
-  const apiUrl = (typeof process !== "undefined" && (process.env as Record<string, string | undefined>).NEXT_PUBLIC_API_URL)
-    ? (process.env as Record<string, string>).NEXT_PUBLIC_API_URL
-    : `${window.location.protocol}//${window.location.hostname}:8000`;
+  const configuredApiUrl =
+    typeof process !== "undefined"
+      ? (process.env as Record<string, string | undefined>).NEXT_PUBLIC_API_URL
+      : undefined;
+  const apiUrl =
+    configuredApiUrl ??
+    `${window.location.protocol}//${window.location.hostname}:8000`;
   const wsBase = apiUrl.replace(/^http/, "ws");
   return `${wsBase}${INFERENCE_WS_PATH}?token=${encodeURIComponent(token)}&channels=overlay,stats,alert`;
 }

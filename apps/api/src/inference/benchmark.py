@@ -64,7 +64,8 @@ def run_plugin_benchmark(
     elapsed = max(time.perf_counter() - start, 1e-9)
 
     n = batch_size * iterations
-    avg = lambda v: round(v / iterations, 4)
+    def avg(value: float) -> float:
+        return round(value / iterations, 4)
     report: dict[str, Any] = {
         "model": plugin.name,
         "backend": plugin.backend,

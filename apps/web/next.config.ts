@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@sentinel/shared"],
+  allowedDevOrigins: ["127.0.0.1"],
   // Proxy all /api/* traffic to the FastAPI backend. The browser only ever
   // talks to the Next origin, which keeps the refresh-token cookie
   // SameSite=Lax friendly and enables middleware-style gating later.

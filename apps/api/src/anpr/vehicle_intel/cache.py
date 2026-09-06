@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from src.core.redis import redis_client
+from src.core.logging import log
 
 
 def _key(prefix: str, *parts: Any) -> str:
@@ -16,7 +17,8 @@ async def cache_get_json(prefix: str, *parts: Any) -> Any | None:
     """Get a JSON value from cache, or None on miss / connectivity failure."""
     try:
         raw = await redis_client.get(_key(prefix, *parts))
-    except Exception:  # noqa: BLE001 - cache must never break the request
+    except Exception as exc:  # noqa: BLE001 - cache must never break the request
+        log.warning("vehicle_intel.cache_get_failed", prefix=prefix, error=str(exc))
         return None
     if raw is None:
         return None
@@ -32,5 +34,5 @@ async def cache_set_json(
     """Set a JSON value in cache, ignoring connectivity failures."""
     try:
         await redis_client.set(_key(prefix, *parts), json.dumps(value), ex=ttl)
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as exc:  # noqa: BLE001
+        log.warning("vehicle_intel.cache_set_failed", prefix=prefix, error=str(exc))

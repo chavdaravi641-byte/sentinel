@@ -40,7 +40,6 @@ from src.anpr.primitives import (
     PlateEvent,
     PlateBox,
     Timings,
-    normalize_plate,
     parse_state_rto,
 )
 from src.anpr.vehicles import VehicleIntelligence
@@ -94,7 +93,8 @@ class AnprEventBus:
     async def publish(self, payload: dict[str, Any]) -> None:
         try:
             self._q.put_nowait(payload)
-            forced = self._q.get_nowait() if self._q.qsize() > 480 else None
+            if self._q.qsize() > 480:
+                self._q.get_nowait()
         except Exception:  # noqa: BLE001
             pass
 

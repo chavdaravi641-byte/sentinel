@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String
@@ -21,6 +21,11 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.models.base import Base, TimestampMixin
+
+
+def _utcnow() -> datetime:
+    """Return a timezone-aware UTC timestamp for ORM-created security events."""
+    return datetime.now(timezone.utc)
 
 
 class SecurityEventType(str, enum.Enum):
@@ -101,7 +106,7 @@ class PasswordHistory(Base, TimestampMixin):
     )
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     changed_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=_utcnow, nullable=False
     )
 
 
@@ -119,7 +124,7 @@ class LoginAttempt(Base, TimestampMixin):
     success: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     kind: Mapped[str] = mapped_column(String(32), default="password", nullable=False)
     occurred_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=_utcnow, nullable=False
     )
 
 
@@ -177,7 +182,7 @@ class SecurityEvent(Base, TimestampMixin):
     trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     occurred_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=_utcnow, nullable=False
     )
 
 
@@ -195,10 +200,10 @@ class SecurityThreat(Base, TimestampMixin):
     detail: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     observed_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     first_seen: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=_utcnow, nullable=False
     )
     last_seen: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+        DateTime(timezone=True), default=_utcnow, nullable=False
     )
     status: Mapped[str] = mapped_column(String(16), default="open", nullable=False)
 

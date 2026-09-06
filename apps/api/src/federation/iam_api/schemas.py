@@ -10,7 +10,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from src.federation.models import (
     AccessMode,
-    AccessStatus,
     DepartmentType,
     EmergencyStatus,
     JurisdictionScope,

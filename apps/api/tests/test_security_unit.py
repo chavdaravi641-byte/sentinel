@@ -8,7 +8,13 @@ helpers in the auth module.
 
 from __future__ import annotations
 
+import pytest
+from pydantic import ValidationError
+from starlette.requests import Request
+
+from src.api.deps import get_request_meta
 from src.core.config import settings
+from src.core.config import Settings
 from src.security import api as api_security
 from src.security import auth as auth_security
 from src.security import core as core_security
@@ -37,6 +43,83 @@ def test_normalize_ip():
     assert core_security.normalize_ip("not-an-ip") is None
     assert core_security.normalize_ip(None) is None
     assert core_security.normalize_ip("") is None
+
+
+def test_request_meta_ignores_forwarded_ip_from_untrusted_peer(monkeypatch):
+    monkeypatch.setattr(settings, "TRUSTED_PROXY_CIDRS", "10.0.0.0/8")
+    request = Request(
+        {
+            "type": "http",
+            "client": ("192.0.2.10", 1234),
+            "headers": [(b"x-forwarded-for", b"198.51.100.20")],
+        }
+    )
+
+    _, ip = get_request_meta(request)
+
+    assert ip == "192.0.2.10"
+
+
+def test_request_meta_uses_rightmost_untrusted_forwarded_ip(monkeypatch):
+    monkeypatch.setattr(settings, "TRUSTED_PROXY_CIDRS", "10.0.0.0/8")
+    request = Request(
+        {
+            "type": "http",
+            "client": ("10.0.0.8", 1234),
+            "headers": [
+                (b"x-forwarded-for", b"198.51.100.20, 10.0.0.9"),
+            ],
+        }
+    )
+
+    _, ip = get_request_meta(request)
+
+    assert ip == "198.51.100.20"
+
+
+def test_request_meta_rejects_malformed_forwarded_chain(monkeypatch):
+    monkeypatch.setattr(settings, "TRUSTED_PROXY_CIDRS", "10.0.0.0/8")
+    request = Request(
+        {
+            "type": "http",
+            "client": ("10.0.0.8", 1234),
+            "headers": [(b"x-forwarded-for", b"198.51.100.20, invalid-hop")],
+        }
+    )
+
+    _, ip = get_request_meta(request)
+
+    assert ip == "10.0.0.8"
+
+
+def test_request_meta_rejects_duplicate_forwarded_headers(monkeypatch):
+    monkeypatch.setattr(settings, "TRUSTED_PROXY_CIDRS", "10.0.0.0/8")
+    request = Request(
+        {
+            "type": "http",
+            "client": ("10.0.0.8", 1234),
+            "headers": [
+                (b"x-forwarded-for", b"198.51.100.20"),
+                (b"x-forwarded-for", b"203.0.113.7"),
+            ],
+        }
+    )
+
+    _, ip = get_request_meta(request)
+
+    assert ip == "10.0.0.8"
+
+
+def test_trusted_proxy_cidrs_accepts_ipv4_ipv6_and_empty():
+    configured = Settings(TRUSTED_PROXY_CIDRS="10.0.0.0/8, 2001:db8::/32")
+
+    assert len(configured.trusted_proxy_networks) == 2
+    assert Settings(TRUSTED_PROXY_CIDRS="").trusted_proxy_networks == []
+
+
+def test_trusted_proxy_cidrs_rejects_invalid_network():
+    with pytest.raises(ValidationError, match="10.999.0.0/8"):
+        Settings(TRUSTED_PROXY_CIDRS="10.0.0.0/8,10.999.0.0/8")
 
 
 def test_fingerprint_engine_stable_and_salted():

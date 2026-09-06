@@ -115,7 +115,7 @@ ISAPI/CGI/ONVIF conventions and currently delegate runtime media calls to a
 deterministic mock provider because no physical lab hardware is attached in the
 build environment. Live swap-in requires **enabling the network call** in the
 adapter (`offline` mixin → live HTTP/RTSP client) — interfaces, contracts, and
-data flow are production-accurate and fully tested (287 tests passing).
+data flow are production-accurate and fully tested (293 tests passing).
 
 ## 5. Challenge Objectives Checklist
 

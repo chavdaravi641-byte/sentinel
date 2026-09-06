@@ -51,7 +51,7 @@ UI `app/map` → Interception Vector (plate → Compute Corridor → arm trigger
 
 ## 3. Video Walkthrough Script (Max Duration per Guidelines)
 
-**Act 0 (0:00-0:30) — Health** — `docker compose ps` (5 healthy), `curl /api/v1/health` ok, `http://localhost:3000/login` (admin@sentinel.gp).
+**Act 0 (0:00-0:30) — Health** — `docker compose ps` (five services running; Postgres/Redis healthchecks healthy), `curl /api/v1/health` with live component results, `http://localhost:3000/login` (admin@sentinel.gp).
 
 **Act 1 (0:30-1:30) — Fleet onboarding** — `app/cameras` (51), `GET /registry?limit=50` vendor mix, `POST /cameras/{id}/test`, `GET /streams/discover_onvif`.
 
@@ -59,13 +59,13 @@ UI `app/map` → Interception Vector (plate → Compute Corridor → arm trigger
 
 **Act 3 (2:30-4:00) — Trace the designated vehicle** — `app/routes?plate=GJ01AB1234` (dossier panel: 5 sightings · 1 dept · 1 district · SHA), `?format=pdf` download, `dossier/verify valid:true`, `app/map` Interception Vector (Compute Corridor → 88%).
 
-**Act 4 (4:00-5:00) — GIS & alerts** — `app/map` route polyline, `GET /registry/gis/report?format=markdown`, `app/alerts` escalated license_plate, `demo_scenario` 23 pass banner.
+**Act 4 (4:00-5:00) — GIS & alerts** — `app/map` route polyline, `GET /registry/gis/report?format=markdown`, `app/alerts` escalated license_plate, `demo_scenario` 24 pass banner.
 
 **Act 5 (5:00-5:30) — Scale & close** — `08` scalability to 80k, `docker compose` HA (`/cluster/dashboard`).
 
 ## 4. Reproducibility
 
-- `docker compose up --build -d` → seed idempotent (51/51/10/8) → `python -m src.demo_scenario` (23 pass, 1 skip) — narrate from live output.
+- `docker compose up --build -d` → seed idempotent (51/51/10/8) → `python -m src.demo_scenario` (24 pass, 0 skip) — narrate from live output.
 - Supply a different designated plate → same contracts; empty route is valid (no false alert).
 - Store exports from `GET /vehicles/{plate}/dossier?format=pdf|markdown` + `gis/report` as video appendices.
 

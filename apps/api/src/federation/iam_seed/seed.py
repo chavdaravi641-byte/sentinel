@@ -12,7 +12,6 @@ Used by tests, the validation harness and (optionally) Docker startup.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

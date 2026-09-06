@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Panel } from "@/components/layout/panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { IamEmptyState } from "@/components/iam/empty-state";
 import { endpoints } from "@/lib/api";
 import { iamFetch } from "@/lib/iam";
 import { useIamList } from "@/lib/iam-hooks";
@@ -65,6 +66,11 @@ export default function IamRolesPage() {
             <div className="flex items-center gap-2 p-6 font-mono text-xs text-muted-foreground">
               <Loader2 className="animate-spin" /> Loading roles…
             </div>
+          ) : (data ?? []).length === 0 ? (
+            <IamEmptyState
+              title="No roles available"
+              description="The role catalogue is empty for the current jurisdiction."
+            />
           ) : (
             <ul>
               {(data ?? []).map((r) => (

@@ -1,19 +1,35 @@
 # Solution Presentation — Sentinel AI (Gujarat CCTV Integration)
 
-> Deliverable 1 as per hackathon guidelines. Markdown outline for PPT/PDF export (Marp / PowerPoint). Each heading = one slide; speaker notes included as blockquotes.
+> Deliverable 1 as per hackathon guidelines. Markdown outline for PPT/PDF export (Marp / PowerPoint). Each heading = one slide; speaker notes included as blockquotes. The sequence is optimized for a 10-minute judge presentation.
 
 ---
 
-## Slide 1 — Title
+## Slide 1 — Problem Statement
 **Sentinel AI — Unified CCTV Intelligence for Gujarat Police**  
 Hybrid Reference Model 3 (Middleware Federation) + Model 4 (Central VMS) + GIS Registry (Model 1)  
 *Vendor-neutral, scalable to 80,000 cameras*
+
+**Problem:** disparate camera vendors, department boundaries, disconnected watchlists,
+and slow manual investigation make it difficult to turn live video into an actionable,
+auditable response.
 
 > Speaker note: One platform that onboards 50 heterogeneous feeds today and scales to statewide 80k without redesign.
 
 ---
 
-## Slide 2 — Proposed Solution Model & Justification
+## Slide 2 — Current Government CCTV Challenges
+
+- Heterogeneous vendor protocols and camera onboarding workflows
+- Departmental data silos and inconsistent access control
+- Live monitoring separated from ANPR, watchlists, GIS, and evidence
+- Weak traceability when an alert becomes an investigation
+- Growth from a local deployment to a statewide fleet requires a staged path
+
+> Speaker note: The platform addresses integration and response coordination without claiming that external government systems are already connected.
+
+---
+
+## Slide 3 — Proposed Hybrid Architecture
 
 | Option evaluated | Why hybrid 3+4 was chosen |
 |---|---|
@@ -27,7 +43,7 @@ Hybrid Reference Model 3 (Middleware Federation) + Model 4 (Central VMS) + GIS R
 
 ---
 
-## Slide 3 — Solution Overview & Objectives
+## Slide 4 — System Components
 
 **Objectives (from portal):** integrate ~50 heterogeneous feeds, correlate live video with watchlist DB, AI-powered real-time alerts.
 
@@ -39,7 +55,18 @@ Hybrid Reference Model 3 (Middleware Federation) + Model 4 (Central VMS) + GIS R
 
 ---
 
-## Slide 4 — Key Innovations
+## Slide 5 — Camera Integration Pipeline
+
+**Pipeline:** discover or register camera → validate protocol and location →
+assign jurisdiction → publish stream through the media plane → expose health and
+status to the command center.
+
+**Verified integration paths:**
+
+- Manual registration through the registry API and Settings flow
+- Bulk CSV preview and commit with idempotent import handling
+- ONVIF discovery through the configured probe URLs
+- Explicitly labelled synthetic/lab sources for repeatable testing
 
 1. **AdapterRegistry** — one `CameraAdapter` contract per vendor (Hikvision/Dahua/Axis/Bosch/Hanwha/CP Plus/ONVIF); `register()` adds a brand without core change.
 2. **Federated IAM** — 14 departments, hierarchical scope (`state_hq > commissionerate > district`), break-glass emergency, persisted in Postgres `fed_*` (17 tables) via `FED_DATABASE_URL`.
@@ -49,7 +76,10 @@ Hybrid Reference Model 3 (Middleware Federation) + Model 4 (Central VMS) + GIS R
 
 ---
 
-## Slide 5 — System Architecture Diagram
+## Slide 6 — ANPR + Watchlist + Alert Flow
+
+The following diagram shows the end-to-end path from camera ingestion through
+ANPR, watchlist matching, alerting, evidence, and the web command center.
 
 ```mermaid
 flowchart LR
@@ -75,7 +105,35 @@ flowchart LR
 
 ---
 
-## Slide 6 — Camera Onboarding for ~50 Heterogeneous Cameras
+## Slide 7 — Live GIS & Route Reconstruction
+
+**Live operational view:**
+- Camera registry coordinates and status feed the GIS command view.
+- ANPR sightings are ordered into a vehicle route and dossier.
+- Interception prediction and coverage-gap analysis are available from the existing GIS and forensics paths.
+- Evidence is linked to the alert and can be verified through the dossier integrity endpoint.
+
+> Speaker note: Show the map, route, evidence, and dossier as one investigation flow. Distinguish seeded or simulated data from live camera data.
+
+---
+
+## Slide 8 — Security & RBAC
+
+- Federated IAM with department and jurisdiction scope
+- Role and permission enforcement at API boundaries
+- Audit trail for security-sensitive operations
+- Trusted-proxy validation for request identity metadata
+- Sealed dossier integrity verification using SHA-256
+
+> Speaker note: Explain what is implemented in this repository separately from future VAHAN/CCTNS or identity-provider integrations.
+
+---
+
+## Slide 9 — Scalability Roadmap (50 → 80,000 Cameras)
+
+The current camera integration path is designed as the first tier of a staged
+scale-up: onboard and govern a heterogeneous fleet now, then separate media,
+analytics, storage, and API capacity by cluster.
 
 | Mechanism | How it works | Evidence |
 |---|---|---|
@@ -89,7 +147,7 @@ Onboarded fleet: `GET /api/v1/cameras` (51), `GET /api/v1/registry` (51), `GET /
 
 ---
 
-## Slide 7 — AI & Video Analytics Approach
+## Slide 10 — Demo Results
 
 **ANPR:** `src/anpr/*` (primitives, tracker `norFair`-style, backend `sim`), OCR conf 0.86-0.93, `backend="sim"` swappable to live engine behind same `/anpr/*` contract; benchmark harness `media/ai/benchmarks/` (sub-second).
 
@@ -101,7 +159,7 @@ Onboarded fleet: `GET /api/v1/cameras` (51), `GET /api/v1/registry` (51), `GET /
 
 ---
 
-## Slide 8 — Scalability Roadmap to ~80,000 Cameras
+## Slide 11 — Future Roadmap
 
 | Tier | Today (51) | 80k design |
 |---|---|---|
@@ -116,7 +174,7 @@ Onboarded fleet: `GET /api/v1/cameras` (51), `GET /api/v1/registry` (51), `GET /
 
 ---
 
-## Slide 9 — Network & Storage Considerations
+### Network & Storage Direction
 
 - **Ingest:** RTSP over district MPLS → state DC; MediaMTX remux `hlsAlwaysRemux=yes`, `hlsSegmentCount=15`, `1s` segments.
 - **Hot** (0-7d) NVMe for live HLS segments + `anpr_plate_detections` recent window.
@@ -125,7 +183,7 @@ Onboarded fleet: `GET /api/v1/cameras` (51), `GET /api/v1/registry` (51), `GET /
 
 ---
 
-## Slide 10 — Cost-Benefit & Resource Estimation (per 80k)
+### Cost and Resource Direction
 
 - Vendor-neutral saves ~30-40% vs single-VMS lock-in (replace per-vendor without forklift).
 - MediaMTX + open PostGIS vs proprietary VMS/GIS: ~$0.12/camera/day at scale.
@@ -136,17 +194,26 @@ Onboarded fleet: `GET /api/v1/cameras` (51), `GET /api/v1/registry` (51), `GET /
 
 ---
 
-## Slide 11 — Live Evidence (Screenshots to record for video)
+### Evidence to Show
 
 - `GET /vehicles/GJ01AB1234/dossier` → 5 sightings route (AHM chain 17:53→18:31 UTC)
 - `app/routes` dossier panel + SHA-256, `app/map` Interception Vector (88% confidence, 1 node)
-- `GET /registry/gis/report?format=markdown` (909 chars), `demo_scenario` 23 pass
+- `GET /registry/gis/report?format=markdown` (909 chars), `demo_scenario` 24 pass / 0 fail / 0 skip
 - `GET /cameras` 51, `vendor_id` mix 9/7×6
 
 ---
 
-## Slide 12 — Deployment & Submission Links
+## Slide 12 — Thank You / Q&A
+
+**Suggested closing:**
+“Sentinel AI turns heterogeneous CCTV feeds into a governed, searchable, and
+auditable operational workflow. The current implementation demonstrates the
+integration path; the roadmap shows how to scale it statewide.”
+
+**Questions:** architecture, interoperability, security, failure handling, and the
+50-to-80,000-camera scale path.
+
+### Deployment & Submission Links
 
 - `docker compose up --build -d` → `http://localhost:8000/docs` (OpenAPI), `http://localhost:3000/login` (admin@sentinel.gp / Admin@2026)
 - Repo: (add GitHub URL), Live URL: (add if hosted), Docs bundle: `07`–`11` + `01`–`06`.
-

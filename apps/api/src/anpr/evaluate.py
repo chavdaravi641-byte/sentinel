@@ -24,12 +24,12 @@ from __future__ import annotations
 
 import statistics
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
 
-from src.anpr.dataset import SyntheticDataset, conditions, make_condition
+from src.anpr.dataset import SyntheticDataset, conditions
 from src.anpr.plate_detector import PlateDetector
 from src.anpr.plate_rectifier import rectify_plate
 from src.anpr.ocr import OcrEngine

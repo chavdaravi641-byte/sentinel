@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from src.models.camera import CameraStatus
 from src.schemas.alert import AlertRead
+from src.schemas.incident import IncidentRead
 
 
 class CameraGeoPoint(BaseModel):
@@ -29,3 +30,5 @@ class DashboardSummary(BaseModel):
     recent_alerts: list[AlertRead]
     camera_geo: list[CameraGeoPoint]
     system: SystemHealth
+    latest_incident: IncidentRead | None = None
+    detections_today: int = 0

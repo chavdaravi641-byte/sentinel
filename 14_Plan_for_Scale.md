@@ -14,7 +14,7 @@ Baseline `a95adcd` runs 51 cameras on 5 containers (api/web/postgres-postgis/red
 
 | Phase | Scope | Cameras | Duration | Onboarding tool | Success gate |
 |---|---|---|---|---|---|
-| **0 Pilot** | Evaluation baseline (current) | 51 | Done | Manual + bulk CSV + ONVIF discovery | Dossier 5 hops `valid:True`, demo 23 pass |
+| **0 Pilot** | Evaluation baseline (current) | 51 | Done | Manual + bulk CSV + ONVIF discovery | Dossier 5 hops `valid:True`, demo 24 pass / 0 fail / 0 skip |
 | **1 District** | 2 pilot districts (AHM + SRT) | ~5,000 | 8 wks | Bulk CSV + auto-discovery per `10.10.x.0/16` subnet | `registry/gis/report` blind_cells < 5% |
 | **2 Zonal** | 6 zones (19 districts) | ~25,000 | 12 wks | Parallel district MediaMTX fleets + `cluster` leases | `GET /cluster/health` all green, federation `14→26` depts |
 | **3 Statewide** | All 26 depts + private-public | ~80,000 | 16 wks | Zero-touch provisioning (ONVIF `PROBE_URLS` + DHCP option 43) | `camera_registry 80k`, `fed_permissions 320→~800` |
@@ -113,6 +113,6 @@ Baseline `a95adcd` runs 51 cameras on 5 containers (api/web/postgres-postgis/red
 
 ## Verification (Baseline Already Proves Scale Contracts)
 
-- `287 pytest pass` + `demo_scenario 23 pass/0 fail` + `tsc --noEmit` clean
+- `293 pytest pass` + `demo_scenario 24 pass/0 fail/0 skip` + `tsc --noEmit` clean
 - Live `GET /vehicles/GJ01AB1234/dossier 5 hops valid:True` + `POST /vehicles/.../interception 88%` + `watchlists 10` + `alerts 8`
 - `GET /registry/gis/report` 10800 cells + `GET /cluster/dashboard|health` → ready for 80k replication.

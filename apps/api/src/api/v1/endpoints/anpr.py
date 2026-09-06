@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 
 from src.api.deps import CurrentUser, DBDep, StaffUser
 from src.anpr.benchmark import run_benchmark
-from src.anpr.dataset import SyntheticDataset, make_condition
+from src.anpr.dataset import SyntheticDataset
 from src.anpr.diagnostics import FrameDiagnostics
 from src.anpr.evaluate import Evaluator
 from src.anpr.pipeline import get_anpr_manager

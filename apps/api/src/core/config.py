@@ -5,7 +5,9 @@ or a root `.env` file (docker-compose injects them directly).
 """
 
 from functools import lru_cache
+import ipaddress
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -30,6 +32,23 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     COOKIE_SECURE: bool = False
     COOKIE_DOMAIN: str | None = None
+    # Only proxies in these CIDRs may provide a trusted X-Forwarded-For chain.
+    TRUSTED_PROXY_CIDRS: str = ""
+
+    @field_validator("TRUSTED_PROXY_CIDRS")
+    @classmethod
+    def validate_trusted_proxy_cidrs(cls, value: str) -> str:
+        for candidate in value.split(","):
+            candidate = candidate.strip()
+            if not candidate:
+                continue
+            try:
+                ipaddress.ip_network(candidate, strict=False)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Invalid TRUSTED_PROXY_CIDRS entry: {candidate}"
+                ) from exc
+        return value
 
     # CORS
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
@@ -250,6 +269,19 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.BACKEND_CORS_ORIGINS.split(",") if o.strip()]
+
+    @property
+    def trusted_proxy_networks(self) -> list[ipaddress.IPv4Network | ipaddress.IPv6Network]:
+        networks: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = []
+        for value in self.TRUSTED_PROXY_CIDRS.split(","):
+            value = value.strip()
+            if not value:
+                continue
+            try:
+                networks.append(ipaddress.ip_network(value, strict=False))
+            except ValueError:
+                continue
+        return networks
 
 
 @lru_cache

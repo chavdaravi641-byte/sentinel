@@ -10,7 +10,6 @@ cannot answer are reported as data-unavailable, never fabricated).
 from __future__ import annotations
 
 import time
-from collections import Counter
 from typing import Any
 
 from src.anpr.copilot.analysis import (

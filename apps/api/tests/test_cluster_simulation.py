@@ -7,9 +7,7 @@ failover, and honest synthetic labelling (no fabricated metrics).
 
 from __future__ import annotations
 
-import asyncio
 
-import pytest
 
 from src.cluster.simulator import run_simulations, run_node_scale
 

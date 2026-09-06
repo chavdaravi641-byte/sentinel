@@ -71,8 +71,8 @@ async def list_cameras(
     svc = get_service()
     leases = svc.store.leases()
     if node_id:
-        leases = [l for l in leases if l.owner_node_id == node_id]
-    return [l.to_dict() for l in leases]
+        leases = [lease for lease in leases if lease.owner_node_id == node_id]
+    return [lease.to_dict() for lease in leases]
 
 
 @router.get("/cameras/{camera_id}", response_model=CameraLeaseOut)
@@ -194,7 +194,7 @@ async def dashboard(_user: StaffUser):
     return DashboardOut(
         nodes=[n.to_dict() for n in store.nodes()],
         heartbeats=store.heartbeat_log(limit=100),
-        owned_cameras=[l.to_dict() for l in store.leases()],
+        owned_cameras=[lease.to_dict() for lease in store.leases()],
         capacity=store.health_summary()["capacity"],
         health=store.health_summary(),
     )

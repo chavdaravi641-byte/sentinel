@@ -21,7 +21,7 @@ from src.forensics.dossier import (
     render_dossier_markdown,
     render_dossier_pdf,
 )
-from src.schemas.forensics import DossierRead, DossierVerifyRead
+from src.schemas.forensics import DossierVerifyRead
 from src.schemas.interception import (
     InterceptionRequest,
     InterceptionVectorRead,

@@ -192,4 +192,4 @@ async def test_owned_cameras_reports_owner(store: ClusterStore):
     cid = uuid.uuid4()
     await store.assign_camera(cid, owner_node_id="node-00000")
     owned = store.owned_cameras("node-00000")
-    assert [l.camera_id for l in owned] == [cid]
+    assert [lease.camera_id for lease in owned] == [cid]

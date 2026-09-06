@@ -7,6 +7,7 @@ from sqlalchemy import text
 
 from src.api.deps import DBDep
 from src.core.config import settings
+from src.core.logging import log
 from src.core.redis import redis_client
 from src.schemas.common import HealthResponse
 
@@ -26,8 +27,8 @@ async def health(db: DBDep) -> HealthResponse:
         await db.execute(text("SELECT 1"))
         db_latency = round((time.perf_counter() - start) * 1000, 2)
         db_status = "ok"
-    except Exception:
-        pass
+    except Exception as exc:
+        log.warning("health.database_probe_failed", error=str(exc))
 
     redis_status, redis_latency = "degraded", None
     try:
@@ -35,8 +36,8 @@ async def health(db: DBDep) -> HealthResponse:
         await redis_client.ping()
         redis_latency = round((time.perf_counter() - start) * 1000, 2)
         redis_status = "ok"
-    except Exception:
-        pass
+    except Exception as exc:
+        log.warning("health.redis_probe_failed", error=str(exc))
 
     status = "ok" if db_status == "ok" and redis_status == "ok" else "degraded"
     return HealthResponse(

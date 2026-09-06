@@ -14,14 +14,12 @@ import pytest
 
 from src.anpr.validator import (
     Candidate,
-    CharacterCorrectionEngine,
     ConfidenceAnalyzer,
     ConfidenceReRanker,
     IndianRegistrationParser,
     PlateNormalizer,
     PlateValidation,
     PlateValidator,
-    ValidationEngine,
     OcrChar,
 )
 from src.anpr.rto_data import state_code_valid, state_rto_valid, STATES

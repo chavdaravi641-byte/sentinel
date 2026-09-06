@@ -23,8 +23,7 @@ the OCR must segment and read glyphs).
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -219,5 +218,4 @@ __all__ = [
     "CaptureCondition",
     "conditions",
     "make_condition",
-    "CONFUSABLES",
 ]

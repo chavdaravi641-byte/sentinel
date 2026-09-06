@@ -39,7 +39,9 @@ services:
       - sentinel-net
 
   mediamtx:
-    image: bluenviron/mediamtx:latest
+    # Pin the verified image digest so demo and deployment behavior cannot
+    # change unexpectedly when the upstream latest tag moves.
+    image: bluenviron/mediamtx@sha256:1b029d11049be75630e9b73bb0d5f47b08a7db4eaee89a80bf8f53bc40e56414
     container_name: sentinel-mediamtx
     restart: unless-stopped
     volumes:

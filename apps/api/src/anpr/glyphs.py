@@ -8,7 +8,6 @@ and reproducible. Not used by the real (PaddleOCR / ONNX) path.
 
 from __future__ import annotations
 
-from typing import Any
 
 import numpy as np
 

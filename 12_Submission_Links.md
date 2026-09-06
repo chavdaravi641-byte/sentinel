@@ -43,10 +43,10 @@ All markdown docs are directly viewable in-repo; export to PDF/PPT via Pandoc/Ma
 | — | `README.md` | Deploy | Quickstart |
 
 **Verification bundle (live):**
-- `python -m src.demo_scenario` (23 pass) → attach log
+- `python -m src.demo_scenario` (24 pass, 0 fail, 0 skip) → attach log
 - `GET /api/v1/vehicles/GJ01AB1234/dossier` (+ `?format=pdf|markdown`, `/verify`) → route PDF
 - `GET /api/v1/registry/gis/report?format=markdown` (909 chars) + `GET /registry/gis/gaps|coverage|clusters`
-- `287 pytest` + `tsc --noEmit` clean
+- `293 pytest` + `tsc --noEmit` clean
 
 ## 4. How Evaluators Access Documents
 

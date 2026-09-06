@@ -14,11 +14,9 @@ from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from src.federation.db import get_federation_db
 from src.federation.iam_api.deps import FederatedDBDep, Principal, PrincipalDep, require_permission
 from src.federation.iam_api.schemas import (
     AbacPolicyIn,
@@ -34,7 +32,6 @@ from src.federation.iam_api.schemas import (
     OfficerIn,
     OfficerOut,
     OfficerStatusIn,
-    PasswordChangeIn,
     PermissionIn,
     PermissionOut,
     RoleIn,
@@ -44,10 +41,7 @@ from src.federation.iam_api.schemas import (
 )
 from src.federation.models import (
     AbacPolicy,
-    AccessMode,
-    AuditLog,
     Department,
-    DepartmentType,
     EmergencyAccess,
     Officer,
     OfficerAccountStatus,
@@ -58,21 +52,16 @@ from src.federation.models import (
 )
 from src.federation.security import breakglass as bg
 from src.federation.security.audit import AuditEvent, search_audit, write_audit
-from src.federation.security.jurisdiction import build_tree, descendants, hierarchy_level_for_type
+from src.federation.security.jurisdiction import build_tree, hierarchy_level_for_type
 from src.federation.security.permissions import all_permission_codes
 from src.federation.security.session import (
     SessionManager,
-    is_locked_out,
-    password_meets_policy,
-    should_lock,
-    validate_password_policy,
 )
 
 router = APIRouter(prefix="/iam", tags=["iam"])
 
 
 def _to_dept_out(d: Department) -> dict:
-    import orjson
 
     return DepartmentOut.model_validate(d).model_dump(mode="json")
 
@@ -116,7 +105,6 @@ async def create_department(
         parent = await db.get(Department, payload.parent_id)
         if parent is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Parent department not found.")
-    from src.federation.models import DepartmentKind
 
     dept = Department(
         code=payload.code,

@@ -1,13 +1,19 @@
 """Dashboard aggregation endpoint."""
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter
+from sqlalchemy import func, select
 
 from src.api.deps import CurrentUser, DBDep
 from src.core.config import settings
 from src.crud import alert as alert_crud
 from src.crud import camera as camera_crud
+from src.crud import incident as incident_crud
 from src.models.camera import CameraStatus
+from src.models.inference import Detection
 from src.schemas.alert import AlertRead
+from src.schemas.incident import IncidentRead
 from src.schemas.dashboard import (
     CameraGeoPoint,
     DashboardSummary,
@@ -56,6 +62,24 @@ async def dashboard_summary(
     # Alert aggregates (single query pass)
     alert_stats = await alert_crud.stats(db)
 
+    # Operational context for the first viewport.
+    latest_rows, _ = await incident_crud.list_incidents(db, status=None, incident_type=None, page=1, page_size=1)
+    latest_incident = None
+    if latest_rows:
+        incident, camera_name, reporter_name = latest_rows[0]
+        latest_incident = IncidentRead.model_validate(incident)
+        latest_incident.camera_name = camera_name
+        latest_incident.reported_by_name = reporter_name
+
+    start_of_day = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    detections_today = int(
+        (
+            await db.execute(
+                select(func.count(Detection.id)).where(Detection.ts >= start_of_day)
+            )
+        ).scalar_one()
+    )
+
     redis_latency = await redis_ping()
     is_db_ok = True  # this endpoint only resolves when the DB session works
     system = SystemHealth(
@@ -81,4 +105,6 @@ async def dashboard_summary(
         recent_alerts=recent_alerts,
         camera_geo=camera_geo,
         system=system,
+        latest_incident=latest_incident,
+        detections_today=detections_today,
     )

@@ -40,7 +40,6 @@ produced will be genuine, reproducible measurements.
 from __future__ import annotations
 
 import csv
-import json
 import statistics
 import time
 from abc import ABC, abstractmethod

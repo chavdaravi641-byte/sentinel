@@ -4,10 +4,11 @@
 
 **Pre-flight (do 5 min before judges arrive, not on clock):**
 ```bash
-docker compose up --build -d && docker compose ps # 5 healthy
-docker exec sentinel-api python -m src.demo_scenario # 23 pass 0 fail
-curl http://localhost:8000/api/v1/health # {"status":"ok","database":"2-4ms"}
-curl http://localhost:8000/api/v1/vehicles/GJ01AB1234/dossier | jq .summary # 5 hops valid:True
+docker compose up --build -d
+docker compose ps # five services running; postgres/redis healthchecks healthy
+docker exec sentinel-api python -m src.demo_scenario # 24 pass 0 fail 0 skip
+curl http://localhost:8000/api/v1/health # inspect live component status/latency
+curl http://localhost:8000/api/v1/vehicles/GJ01AB1234/dossier | jq .summary # inspect live seeded dossier
 # Keep this terminal visible on projector as proof
 ```
 Login creds on projector: `admin@sentinel.gp / Admin@2026` (demo banner shows it).
@@ -20,15 +21,15 @@ Login creds on projector: `admin@sentinel.gp / Admin@2026` (demo banner shows it
 |---|---|---|---|---|
 | **0-8** | Open `http://localhost:3000/login` → type `admin@sentinel.gp` / `Admin@2026` → **Sign In** | `LoginScreen` → `dashboard` 51 cameras, `SIMULATION MODE` banner **only if** `GET /inference/models` or `GET /anpr/config` is `sim` (amber `SIM BACKEND` on AI page, `SIM OCR` on watchlist) | **"Sentinel AI — hybrid Model 3+4+1, 51 heterogeneous cameras, 7 vendors, vendor-neutral."** | If login fails: show `curl /api/v1/auth/login` 200 in terminal → retry. |
 | **8-15** | Click **`app/cameras` → Register Camera** → paste `rtsp://admin:sentinel@10.10.99.11:554/Streaming/Channels/101` + name `JUDGE-CAM-01` + lat `23.0225` lng `72.5714` → **Create** | `POST /cameras` 201 + `POST /registry` 201, new row appears, `cameras` count 52 | **"One-click onboarding — manual, bulk CSV, or ONVIF discovery. RTSP validated, duplicate `cctv_code` blocked, lat/lng geo-validated."** | If `invalid RTSP` → toast `RTSP unreachable` (probe `POST /cameras/{id}/test` real TCP 4s) — say **"Probe caught bad URL — enterprise validation."** and use `TEST-LAVFI-01` instead. |
-| **15-22** | Click new camera → **Test** → **Snapshot Preview** → **Online** badge | `POST /cameras/{id}/test` → `reachable:true latency 12ms` + JPEG preview (or `SIMULATED JPEG` if `vendors.py` mock) + `last_health_score 88` | **"Live connectivity test + snapshot + auto health. `SIMULATED JPEG` badge means federation adapter mock — real `httpx GET {api_path}` is feature-flagged behind `CAMERA_PROBE_LIVE=true`."** | If `offline` → show `health` `last_frame_age_ms>5000` → **"Offline detection — supervisor will reconnect."** |
+| **15-22** | Click new camera → **Test** → **Snapshot Preview** → **Online** badge | Live `POST /cameras/{id}/test` result with measured reachability/latency and either a real or clearly labelled simulated preview | **"Live connectivity test + snapshot + auto health. Any simulated preview is explicitly labelled; measured values come from this run."** | If `offline` → show the returned health details → **"Offline detection — supervisor will reconnect."** |
 | **22-35** | Click **`app/ai` → Engage AI** on `JUDGE-CAM-01` (Play ▶) → **Live Feed** wall 2×2 | `AiOverlayPane` HLS `fmp4 7×1s 200ms` (≈2s latency) + WebRTC WHEP with STUN, `fps` + `latency_ms` live, **amber `SIM BACKEND` if `yolov12` weights absent** (sinusoidal boxes) | **"YOLOv12 + ANPR pipeline — per-camera `ffmpeg` → MediaMTX → HLS/WebRTC. Boxes are `sim` sinusoidal when weights absent — badge proves honesty; real `yolov12s.onnx` via `AI_WEIGHTS_DIR`."** | If `fps 0` → amber `LOW FPS` badge (already in `live-stream-player.tsx` after fix) → **"Low FPS warning — packet loss handled."** If `internet disconnect` → HLS `NETWORK_ERROR` retries 3× then falls back to MJPEG + toast `HLS unreachable, MJPEG fallback` (no crash). |
-| **35-45** | In another tab, `curl -X POST http://localhost:8000/api/v1/anpr/simulate` (or show pre-seeded `GJ01AB1234` detection) → **Plate Detection** toast | `AnprWatchlistAlert` top bar **"GJ01AB1234 STOLEN_VEHICLE VAHAN — Black Maruti Swift"** + `GET /anpr/search?plate=GJ01AB1234` 5 rows, OCR `0.86-0.93` | **"ANPR 3-stage: detector → OCR (glyph IoU + `sha256` synthetic fallback) → vehicle attr hash. Plate `GJ01AB1234` normalized, `rto 01`."** | If OCR hash plate mismatches watchlist → explain **"Glyph-perfect needed for hit; `backend: sim` raises `ANPR_OCR_MIN_CONF 0.55` — seed watchlist plate = synthetic corpus plate."** |
+| **35-45** | Show the pre-seeded `GJ01AB1234` detection in the watchlist/alert views → **Plate Detection** toast | Live `AnprWatchlistAlert` data and `GET /anpr/search?plate=GJ01AB1234` results; counts and confidence values are read from the current run | **"ANPR 3-stage: detector → OCR (glyph IoU + `sha256` synthetic fallback) → vehicle attribute hash. The plate is normalized before watchlist matching."** | If the seeded event is unavailable, rerun the demo scenario and use the explicit simulation badges rather than inventing a detection. |
 | **45-55** | Click **`app/alerts`** → new **Critical `LICENSE_PLATE` 0.95 `ESCALATED`** on `AHM-ISK-05` | `GET /alerts` `total 8 new 4` + `GET /anpr/alerts` `BLACKLIST` + `MULTI_CAMERA` both fired (`demo_scenario` proof) | **"Blacklist rule firing <100ms via `normalized_plate ==` B-tree (now ` Gin trgm` + composite `(plate, ts)`). `MULTI_CAMERA` on 2nd distinct camera."** | If `Redis restart` → show `redis-cli ping` fails → **"Refresh JTI fallback to in-memory set — demo stays up, prod fails closed (Redis required)."`** |
 | **55-65** | Click **`app/map`** → **GIS Auto Zoom** to new camera | `TacticalMap` `fitBounds` animate to `JUDGE-CAM-01` (lat/lng 23.0225,72.5714), cluster `AHMEDABAD METRO` + new pin, bearing arrow if `orientation_deg` | **"PostGIS-ready GIS — `ST_DWithin` + GIST when `0010_postgis` applied, else Python haversine; clustering via `GET /gis/clusters` (supercluster) for 80k."** | If `internet disconnect` for tiles → SVG fallback still renders pins (no external tile dependency). |
 | **65-72** | Click **`app/routes?plate=GJ01AB1234`** → **Vehicle Timeline** 5 hops | `RouteMap` polyline `AHM-SGH-01 → ISK-05` + `Sighting Log` `2026-09-04T17:53:17Z` to `18:31:17Z` with `confidence` | **"Timeline ordered `ts DESC` with `limit 2000` + keyset pagination — dedup via `(plate, camera_id, rule)` cooldown 300s, no duplicate alerts."** | If `timeline` empty for new plate → **"Empty route is valid — no false alert."** |
 | **72-78** | Click **Evidence** → `GET /evidence/{id}/asset` JPEG crop | `anpr/evidence.py` 3 crops `frame/plate/vehicle` + `sha256` | **"Evidence store `evidence_id→anpr_evidence` FK now enforced, JPEG `cv2.imencode` + digest."** | If `evidence` 404 → **"Frame not yet persisted — warm tier R2/S3 in 80k."** |
 | **78-85** | Click **Export PDF** → **Incident → Export PDF** | `GET /vehicles/GJ01AB1234/dossier?format=pdf` `application/pdf 2032 bytes` + `GET /vehicles/.../dossier/verify` `valid:True` + `X-Dossier-Integrity` header | **"Sealed dossier `integrity_sha256` over canonical JSON + `before/after` JSONB GIN — `valid:True` proves tamper-evident."** | If `invalid RTSP` earlier → still export seeded `GJ01AB1234` 5 hops as evidence (no dependency on live feed). |
-| **85-90** | Click **`app/analytics` → System Health** | `GET /health` `SELECT 1` + `redis.ping` + `GET /cluster/health` `node_total 1` + `GET /registry/health/fleet` | **"Stateless API HPA + PG streaming + Redis Cluster + MediaMTX per district — `docker compose` 5 healthy, `287 tests` pass. SIMULATION MODE badges prove honest `sim` where gov DB / AI weights absent."** | If `internet disconnect` → **"Offline queue `512` drops with `QueueFull: pass` logged, not crashed."** |
+| **85-90** | Click **`app/analytics` → System Health** | Live `GET /health` component results plus cluster/registry health responses | **"The reproducible Compose demo verifies the API, Postgres/PostGIS, Redis, MediaMTX, and web services. Production HPA, Redis Cluster, and statewide deployment remain architecture targets, not demo claims."** | If a dependency is degraded, show the returned component status and use the recovery checklist. |
 
 **Total 90s — rehearse with timer, no typing (paste RTSP), no waiting (pre-seeded `GJ01AB1234` 5 hops).**
 
@@ -40,11 +41,11 @@ Login creds on projector: `admin@sentinel.gp / Admin@2026` (demo banner shows it
 |---|---|---|---|---|
 | AI Vision YOLO | `GET /inference/models` `backend: sim` | `app/ai` amber `SIM BACKEND` + `Zap` icon | `ai/page.tsx:191` | Sinusoidal boxes `2-4` `0.58+0.30*sin` |
 | ANPR detector/OCR | `GET /anpr/config` `plate.backend sim` / `ocr.engine sim` | `app/ai` tooltip `SIM OCR` + `app/watchlist` amber `SIM OCR` (add if missing) | `anpr/plate_detector.py:43`, `ocr.py:118` | Bright blob + hash `GJ##XY####` |
-| Government DB | `mock_vahan_lookup` returns `OWNER-*` / `SIMULATED` | `AnprWatchlistAlert` header `SIMULATED GOV DATA` + `X-Sentinel-Mock: true` (add) | `federation/mock.py:91` | `SIMULATED` maker |
-| Vendor health | `mock_health` 90% `ok` | Registry `last_health_score` shows `probe: mock` detail | `vendors.py:30` | `SIMULATED JPEG` |
+| Government DB | `mock_vahan_lookup` returns `OWNER-*` / `SIMULATED` | Use the existing simulation disclosure in the UI/API; do not claim a live government lookup | `federation/mock.py` | `SIMULATED` maker |
+| Vendor health | `mock_health` returns deterministic simulated results | Registry health output identifies the probe mode | `federation/adapters/vendors.py` | `SIMULATED` |
 | `TEST-LAVFI-01` | `STREAM_ALLOW_TEST_SOURCES=true` + `lavfi://` | `app/cameras` badge `SYNTHETIC` | `services/media/sources.py:46` | Synthetic 25fps bars |
 
-**If any badge is missing, add it before judging — honesty is a scoring dimension (Step 7: 9/10 simulation).**
+**If any badge is missing, disclose the simulation verbally and use the verified demo output; do not add an unverified claim during the presentation.**
 
 ---
 
@@ -68,6 +69,6 @@ Login creds on projector: `admin@sentinel.gp / Admin@2026` (demo banner shows it
 - `SIM BACKEND` amber `border-amber-500/40` visible at 10m on `app/ai`
 - `AnprWatchlistAlert` top bar `SIMULATED GOV DATA` if government mock
 - `TacticalMap` pins `radar-pulse` emerald, not grey
-- Terminal `demo_scenario` 23 pass banner enlarged `font-mono text-xl`
+- Terminal `demo_scenario` 24 pass banner enlarged `font-mono text-xl`
 
 **Files to show if asked:** `HACKATHON_READINESS_REPORT.md` 8.7/10, `GOD_MODE_FINAL_REPORT.md` 87/100, `submission/*.pdf` 6 PDFs, `api/src/...` auth fix `StaffUser` on `cluster`.

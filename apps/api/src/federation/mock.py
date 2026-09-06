@@ -12,7 +12,7 @@ import hashlib
 import random
 from typing import Any
 
-from src.federation.models import CameraState, StreamProtocol
+from src.federation.models import StreamProtocol
 
 _SEED_KEYS = {
     "camera": 20260601,

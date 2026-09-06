@@ -175,7 +175,7 @@ Seeded alert evidence (`ALERTS[4]`): `Amplified license_plate alert (escalated, 
 | **AI video analytics** | ANPR (`/api/v1/anpr/benchmark` + detection confidence 0.86-0.93), inference models, alerts MR engine | 8 ANPR hops, benchmark headroom in `media/ai/benchmarks/` |
 | **Interoperability** | AdapterRegistry (6 vendors + ONVIF), MediaMTX (RTSP→HLS/WebRTC), OpenAPI 3 at `/docs`, shared `packages/shared` | RTSP diversity verified: `Streaming/Channels/101`, `cam/realmonitor`, `axis-media/media.amp`, `rtsp_tunnel`, `profile0`, `live/ch0` |
 | **Scalability** | Stateless API + Redis + Postgres/PostGIS + MediaMTX + `/api/v1/cluster/*` (register/heartbeat/lease/failover) (`src/cluster/router.py`) | `fed_departments=14`, `fed_roles=21`, `fed_permissions=320`; cluster nodes/lifecycle tested |
-| **End-to-end performance** | 287 `pytest` passes (unit + integration + watchlist/forensics/interception); `demo_scenario 23 pass / 0 fail / 1 skip` | `tsc --noEmit` clean; platform health `database latency ~2-4ms, redis ~3ms` |
+| **End-to-end performance** | 293 `pytest` passes (unit + integration + watchlist/forensics/interception); `demo_scenario 24 pass / 0 fail / 0 skip` | `tsc --noEmit` clean; current database/Redis latency is reported live by `/health` rather than documented as a fixed benchmark |
 
 ### 5.1 Expected Output Checklist (STEP 4)
 
@@ -188,7 +188,7 @@ Seeded alert evidence (`ALERTS[4]`): `Amplified license_plate alert (escalated, 
 | Evidence of AI analytics | ANPR detections with OCR confidence + alert firing | 0.86-0.93 OCCR, alerts fired |
 | Interoperability | 7 vendor RTSP paths + ONVIF discovery | Verified |
 | Scalability | GIS 10800 blind cells analysis + cluster + federation persistence | Verified |
-| E2E performance | 287 tests + demo_scenario + health latency | Verified |
+| E2E performance | 293 tests + demo_scenario + health latency | Verified |
 
 ---
 
@@ -212,4 +212,3 @@ Seeding is idempotent; `FED_DATABASE_URL` persists federation IAM across restart
 ## 7. What Judges Need to Supply
 
 Only **one** input: the designated **vehicle registration number** string. The platform handles the rest via the contracts above. For full video demonstration, the `TEST-LAVFI-01` synthetic source (`lavfi://testsrc2=size=1280x720:rate=25`) + `STREAM_ALLOW_TEST_SOURCES=true` allow injecting a live test feed without physical cameras: `python -m src.demo_scenario --inject`.
-

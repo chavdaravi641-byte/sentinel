@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_serializer, model_validator
 
 
 class DossierWatchlistRead(BaseModel):
@@ -49,13 +49,27 @@ class DossierRead(BaseModel):
     plate: str
     normalized_plate: str
     version: str
-    schema: str
+    schema_ref: str
     generated_at: str
     integrity_sha256: str
     source: str
     watchlist: Any = None
     summary: DossierSummaryRead
     sightings: list[DossierSightingRead] = []
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_public_schema_name(cls, value: Any) -> Any:
+        if isinstance(value, dict) and "schema" in value and "schema_ref" not in value:
+            value = dict(value)
+            value["schema_ref"] = value.pop("schema")
+        return value
+
+    @model_serializer(mode="plain")
+    def _serialize_public_schema_name(self) -> dict[str, Any]:
+        payload = self.__dict__.copy()
+        payload["schema"] = payload.pop("schema_ref")
+        return payload
 
 
 class DossierVerifyRead(BaseModel):

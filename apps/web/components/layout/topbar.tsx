@@ -2,14 +2,16 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Command,
+  Bell,
+  Building2,
+  ChevronDown,
   Loader2,
   LogOut,
   Radio,
   UserRound,
-  ChevronDown,
 } from "lucide-react";
 
 import {
@@ -26,14 +28,36 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { useHealth } from "@/lib/queries";
 import { initials } from "@/lib/utils";
+import { useDistrict } from "@/lib/district";
 
 export function Topbar() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { district } = useDistrict();
   const { data: health } = useHealth();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [search, setSearch] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const systemUp = health?.status === "ok";
+  const healthLabel = health?.status === "ok" ? "All systems nominal" : "Review system health";
+
+  useEffect(() => {
+    const onShortcut = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onShortcut);
+    return () => window.removeEventListener("keydown", onShortcut);
+  }, []);
+
+  function handleSearchSubmit() {
+    const query = search.trim();
+    if (!query) return;
+    router.push(`/app/routes?plate=${encodeURIComponent(query)}`);
+  }
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -42,8 +66,8 @@ export function Topbar() {
   }
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur lg:px-6">
-      <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-20 flex min-h-16 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-xl lg:px-6">
+      <div className="flex items-center gap-3">
         {/* Logo */}
         <div className="hidden lg:flex h-10 w-10 flex-shrink-0">
           <Image
@@ -61,23 +85,51 @@ export function Topbar() {
             SENTINEL
           </span>
         </div>
+        <div className="hidden border-l border-border pl-3 sm:block">
+          <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+            State Operations
+          </p>
+          <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-foreground">
+            <Building2 className="h-3.5 w-3.5 text-primary" />
+            Gujarat Police · {district}
+          </p>
+        </div>
       </div>
 
-      <div className="relative hidden flex-1 max-w-md sm:block">
+      <div className="relative hidden max-w-xl flex-1 sm:block">
         <Command className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
         <input
-          placeholder="Search cameras, alerts, incidents…"
-          className="h-9 w-full rounded-md border border-input bg-card/60 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/40"
+          ref={searchRef}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") handleSearchSubmit();
+          }}
+          aria-label="Search cameras, alerts, and incidents"
+          placeholder="Search cameras, vehicles, alerts…"
+          className="h-10 w-full rounded-lg border border-input bg-card/70 pl-9 pr-16 text-sm placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/40"
         />
+        <kbd className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground md:block">
+          Ctrl K
+        </kbd>
       </div>
 
       <div className="ml-auto flex items-center gap-3">
+        <button
+          type="button"
+          aria-label="View notifications"
+          onClick={() => router.push("/app/alerts")}
+          className="relative hidden h-9 w-9 items-center justify-center rounded-md border border-transparent text-muted-foreground transition-colors hover:border-border hover:bg-accent hover:text-foreground sm:flex"
+        >
+          <Bell className="h-4 w-4" />
+          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-danger" />
+        </button>
         {/* System status */}
         <Badge
           variant={systemUp ? "default" : "destructive"}
           className={systemUp ? "" : "border-danger/40 bg-danger/10 text-danger"}
         >
-          <Radio className="h-3 w-3" />
+          <Radio className="h-3 w-3" aria-hidden="true" />
           <span className="hidden sm:inline">
             {systemUp ? "SYSTEMS NOMINAL" : "SYSTEM DEGRADED"}
           </span>
@@ -85,6 +137,9 @@ export function Topbar() {
             {systemUp ? "OK" : "DEGRADED"}
           </span>
         </Badge>
+        <span className="hidden max-w-32 text-right font-mono text-[9px] uppercase leading-tight tracking-wider text-muted-foreground lg:block">
+          {healthLabel}
+        </span>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -150,6 +150,6 @@ async def root() -> dict:
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 # import side-effect ensures logging config is applied before serving
-from src.core import logging as _logging  # noqa: F401
+from src.core import logging as _logging  # noqa: E402,F401
 
 __all__ = ["app"]

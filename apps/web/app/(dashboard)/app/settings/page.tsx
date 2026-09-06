@@ -45,23 +45,21 @@ const passwordSchema = z
 
 type PasswordValues = z.infer<typeof passwordSchema>;
 
-interface ComponentHealth {
-  database?: { status: "ok" | "degraded" };
-  redis?: { status: "ok" | "degraded" };
-}
+type HealthStatus = "ok" | "degraded" | "unknown";
 
 function HealthPill({
   label,
   status,
 }: {
   label: string;
-  status: "ok" | "degraded";
+  status: HealthStatus;
 }) {
+  const isHealthy = status === "ok";
   return (
     <div className="flex items-center gap-2.5 rounded-md border border-border/60 bg-card/60 px-3 py-2">
       <span
         className={`h-1.5 w-1.5 rounded-full ${
-          status === "ok" ? "bg-success radar-pulse" : "bg-amber-400"
+          isHealthy ? "bg-success radar-pulse" : status === "degraded" ? "bg-amber-400" : "bg-muted-foreground"
         }`}
       />
       <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -69,7 +67,7 @@ function HealthPill({
       </span>
       <span
         className={`ml-auto font-mono text-[10px] uppercase tracking-widest ${
-          status === "ok" ? "text-success" : "text-amber-300"
+          isHealthy ? "text-success" : status === "degraded" ? "text-amber-300" : "text-muted-foreground"
         }`}
       >
         {status}
@@ -80,10 +78,13 @@ function HealthPill({
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const { data: health, refetch, isFetching } = useHealth();
+  const { data: health, refetch, isFetching, isError: healthError } = useHealth();
   const [pending, setPending] = useState(false);
 
-  const components = health?.components as ComponentHealth | undefined;
+  const components = health?.components;
+  const healthStatus: HealthStatus = healthError
+    ? "unknown"
+    : health?.status ?? "unknown";
 
   const form = useForm<PasswordValues>({
     resolver: zodResolver(passwordSchema),
@@ -248,15 +249,21 @@ export default function SettingsPage() {
           title="Stack Health"
           subtitle="live probes"
           right={
-            <Button variant="ghost" size="icon" onClick={() => refetch()} disabled={isFetching}>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Refresh stack health"
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
               <RefreshCw className={isFetching ? "animate-spin" : ""} />
             </Button>
           }
           bodyClassName="space-y-2 p-4"
         >
-          <HealthPill label="API gateway" status={health?.status === "ok" ? "ok" : "degraded"} />
-          <HealthPill label="PostgreSQL" status={components?.database?.status ?? "degraded"} />
-          <HealthPill label="Redis" status={components?.redis?.status ?? "degraded"} />
+          <HealthPill label="API gateway" status={healthStatus} />
+          <HealthPill label="PostgreSQL" status={components?.database?.status ?? "unknown"} />
+          <HealthPill label="Redis" status={components?.redis?.status ?? "unknown"} />
           <p className="flex items-center gap-2 pt-1 font-mono text-[11px] text-muted-foreground">
             <Shield className="h-3.5 w-3.5 text-primary" />
             Sentinel AI core v{health?.version ?? "?"}

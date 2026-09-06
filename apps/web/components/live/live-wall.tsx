@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import {
+  BrainCircuit,
   Circle,
+  ImageDown,
   Play,
   Radio,
   Search,
@@ -25,6 +27,7 @@ import {
   useStreamHealth,
   useStreamMedia,
   useStreams,
+  useInferenceCameraStats,
 } from "@/lib/queries";
 import type { Camera, StreamHealth } from "@sentinel/shared";
 
@@ -42,6 +45,7 @@ interface LiveTileProps {
 
 function LiveTile({ camera, health, whep, onFocus }: LiveTileProps) {
   const media = useStreamMedia(camera.id);
+  const inference = useInferenceCameraStats(camera.id);
   const start = useStartStream();
   const stop = useStopStream();
   const recStart = useRecordStart();
@@ -111,6 +115,32 @@ function LiveTile({ camera, health, whep, onFocus }: LiveTileProps) {
           </span>
         </span>
         <span className="flex items-center gap-1 text-[10px]">
+        <span
+          className={cn(
+            "hidden items-center gap-1 font-mono text-[9px] uppercase tracking-wider sm:flex",
+            inference.data?.inference_active ? "text-emerald-300" : "text-muted-foreground",
+          )}
+          title="AI inference status"
+        >
+          <BrainCircuit className="h-3 w-3" />
+          {inference.data?.inference_active ? "AI ON" : "AI OFF"}
+        </span>
+        <span className="hidden font-mono text-[9px] uppercase tracking-wider text-muted-foreground sm:inline">
+          {health?.latency_ms != null ? `${Math.round(health.latency_ms)} ms` : "Latency —"}
+        </span>
+        {media.data?.snapshot_url && (
+          <a
+            href={asMediaPath(media.data.snapshot_url)}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={`Open snapshot for ${camera.name}`}
+            title="Open snapshot"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <ImageDown className="h-3.5 w-3.5" />
+          </a>
+        )}
           <Button
             type="button"
             size="icon"
@@ -118,6 +148,7 @@ function LiveTile({ camera, health, whep, onFocus }: LiveTileProps) {
             className="h-7 w-7"
             disabled={busy}
             onClick={handleToggle}
+            aria-label={running ? "Stop stream" : "Start stream"}
             title={running ? "Stop stream" : "Start stream"}
           >
             {running ? (
@@ -133,6 +164,7 @@ function LiveTile({ camera, health, whep, onFocus }: LiveTileProps) {
             className="h-7 w-7"
             disabled={busy || !running}
             onClick={handleRecord}
+            aria-label={recording ? "Stop recording" : "Start recording"}
             title={recording ? "Stop recording" : "Start recording"}
           >
             <Circle

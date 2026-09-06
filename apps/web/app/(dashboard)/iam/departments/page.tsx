@@ -9,6 +9,7 @@ import { Panel } from "@/components/layout/panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { IamEmptyState } from "@/components/iam/empty-state";
 import { endpoints } from "@/lib/api";
 import { iamFetch } from "@/lib/iam";
 import { useIamList } from "@/lib/iam-hooks";
@@ -97,6 +98,11 @@ export default function IamDepartmentsPage() {
             <div className="flex items-center gap-2 p-6 font-mono text-xs text-muted-foreground">
               <Loader2 className="animate-spin" /> Loading registry…
             </div>
+          ) : filtered.length === 0 ? (
+            <IamEmptyState
+              title="No departments found"
+              description={search ? "No departments match the current search." : "Register a department to establish an IAM boundary."}
+            />
           ) : (
             <table className="w-full text-left text-sm">
               <thead>
@@ -139,6 +145,7 @@ export default function IamDepartmentsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label={`Delete department ${d.name}`}
                         disabled={removing === d.id}
                         onClick={() => void handleDelete(d)}
                       >

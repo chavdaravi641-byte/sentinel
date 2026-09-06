@@ -1,10 +1,9 @@
 """Alert schemas."""
 
 from datetime import datetime
-from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 from src.models.alert import AlertSeverity, AlertStatus, AlertType
 

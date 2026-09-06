@@ -40,26 +40,10 @@ def upgrade() -> None:
     # ANPR geometry
     op.execute("CREATE INDEX IF NOT EXISTS ix_anpr_plate_detections_geom_gist ON anpr_plate_detections USING GIST (ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)) WHERE latitude IS NOT NULL AND longitude IS NOT NULL")
 
-    # Composite indexes — hot paths
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_anpr_plate_detections_norm_plate_ts_desc ON anpr_plate_detections (normalized_plate, ts DESC) INCLUDE (camera_id, plate)")
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_anpr_plate_detections_camera_ts_desc ON anpr_plate_detections (camera_id, ts DESC)")
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_detections_camera_class_ts ON detections (camera_id, class_name, ts DESC)")
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_inference_runs_camera_ts ON inference_runs (camera_id, ts DESC)")
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_anpr_alerts_camera_resolved_lastseen ON anpr_alerts (camera_id, resolved, last_seen_at DESC)")
-
-    # pg_trgm GIN for ILIKE %...%
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS trgm_idx_anpr_make ON anpr_plate_detections USING GIN (make gin_trgm_ops)")
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS trgm_idx_anpr_camera_name ON anpr_plate_detections USING GIN (camera_name gin_trgm_ops)")
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS trgm_idx_watchlist_identifier ON watchlists USING GIN (identifier_number gin_trgm_ops)")
-
     # BRIN for time ranges (partitioning readiness)
     op.execute("CREATE INDEX IF NOT EXISTS ix_anpr_plate_detections_ts_brin ON anpr_plate_detections USING BRIN (ts)")
     op.execute("CREATE INDEX IF NOT EXISTS ix_detections_ts_brin ON detections USING BRIN (ts)")
 
-    # FK indexes + missing FK
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_recordings_stream_id ON recordings (stream_id)")
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_camera_registry_registered_by ON camera_registry (registered_by)")
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_camera_audit_log_actor_id ON camera_audit_log (actor_id)")
     # evidence_id FK (if not exists)
     op.execute("""
         DO $$ BEGIN
@@ -70,10 +54,29 @@ def upgrade() -> None:
         END $$;
     """)
 
-    # JSONB GIN
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS gin_camera_audit_log_before ON camera_audit_log USING GIN (before)")
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS gin_camera_audit_log_after ON camera_audit_log USING GIN (after)")
-    op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS gin_security_events_detail ON security_events USING GIN (detail)")
+    # Concurrent indexes must run outside Alembic's transaction.
+    with op.get_context().autocommit_block():
+        # Composite indexes — hot paths
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_anpr_plate_detections_norm_plate_ts_desc ON anpr_plate_detections (normalized_plate, ts DESC) INCLUDE (camera_id, plate)")
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_anpr_plate_detections_camera_ts_desc ON anpr_plate_detections (camera_id, ts DESC)")
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_detections_camera_class_ts ON detections (camera_id, class_name, ts DESC)")
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_inference_runs_camera_ts ON inference_runs (camera_id, ts DESC)")
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_anpr_alerts_camera_resolved_lastseen ON anpr_alerts (camera_id, resolved, last_seen_at DESC)")
+
+        # pg_trgm GIN for ILIKE %...%
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS trgm_idx_anpr_make ON anpr_plate_detections USING GIN (make gin_trgm_ops)")
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS trgm_idx_anpr_camera_name ON anpr_plate_detections USING GIN (camera_name gin_trgm_ops)")
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS trgm_idx_watchlist_identifier ON watchlists USING GIN (identifier_number gin_trgm_ops)")
+
+        # FK indexes
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_recordings_stream_id ON recordings (stream_id)")
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_camera_registry_registered_by ON camera_registry (registered_by)")
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_camera_audit_log_actor_id ON camera_audit_log (actor_id)")
+
+        # JSONB GIN
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS gin_camera_audit_log_before ON camera_audit_log USING GIN (before)")
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS gin_camera_audit_log_after ON camera_audit_log USING GIN (after)")
+        op.execute("CREATE INDEX CONCURRENTLY IF NOT EXISTS gin_security_events_detail ON security_events USING GIN (detail)")
 
 
 def downgrade() -> None:

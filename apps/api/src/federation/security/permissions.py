@@ -13,7 +13,6 @@ and is invalidated whenever role assignments change. It never stores secrets.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Iterable
 
 from src.federation.models import PermissionAction, ResourceType
 

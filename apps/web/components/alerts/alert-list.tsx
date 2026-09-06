@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   Check,
   ChevronUp,
   CircleDot,
+  ExternalLink,
   Siren,
 } from "lucide-react";
 import type { Alert, AlertStatus } from "@sentinel/shared";
@@ -55,6 +57,7 @@ export function AlertList({
   alerts: Alert[];
   actions: AlertListActions;
 }) {
+  const router = useRouter();
   if (!alerts.length) {
     return (
       <div className="flex flex-col items-center gap-2 py-16 text-center">
@@ -145,6 +148,15 @@ export function AlertList({
                       actions.onSetStatus(alert, ALERT_STATUS.ESCALATED)
                     }
                   />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 px-2 font-mono text-[10px] uppercase tracking-widest text-primary"
+                    onClick={() => router.push("/app/incidents")}
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Investigate
+                  </Button>
                 </>
               )}
               {alert.status !== ALERT_STATUS.RESOLVED && (

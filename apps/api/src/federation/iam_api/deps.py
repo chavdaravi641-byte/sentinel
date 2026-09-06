@@ -38,7 +38,6 @@ FederatedDBDep = Annotated[AsyncSession, Depends(get_federation_db)]
 
 
 def _dept_node(dep: Department) -> DeptNode:
-    from src.federation.models import DepartmentType
 
     return DeptNode(
         id=dep.id,

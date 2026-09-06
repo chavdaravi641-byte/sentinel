@@ -34,7 +34,7 @@ class EventBus:
             try:
                 subs.remove(queue)
             except ValueError:
-                pass
+                return
             if not subs:
                 self._subs.pop(channel, None)
 
@@ -49,11 +49,11 @@ class EventBus:
                 try:
                     queue.get_nowait()
                 except QueueEmpty:
-                    pass
+                    continue
                 try:
                     queue.put_nowait(payload)
                 except QueueFull:
-                    pass
+                    log.warning("ai.event.subscriber_overloaded", channel=channel)
         if channel == "alert" and subs:
             log.debug("ai.event.published", channel=channel, subscribers=len(subs))
 

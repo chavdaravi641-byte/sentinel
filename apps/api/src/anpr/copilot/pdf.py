@@ -105,7 +105,7 @@ class _Pdf:
         try:
             with open(path, "rb") as fh:
                 data = fh.read()
-            img = self._jpeg_xobject(data, max_w)
+            self._jpeg_xobject(data, max_w)
             self.parts.append(b"<< /Type /Page ... >>\n")
         except Exception as exc:  # noqa: BLE001
             self.text(f"{label}: (could not embed: {_esc(exc)})")
@@ -120,11 +120,7 @@ class _Pdf:
         self._flush_page()
         n_pages = len(self.parts)
         objects: list[bytes] = []
-        offset = 0
-        body = b""
         for i, page in enumerate(self.parts, start=1):
-            size = len(b"<< /Type /Page /MediaBox [0 0 595 842] /Contents " +
-                       f"{i+1} 0 R >>\n".encode() + page)
             objects.append(
                 f"{i} 0 obj\n<< /Type /Page /MediaBox [0 0 595 842] /Contents "
                 f"{i+1} 0 R /Resources << /ProcSet [/PDF /Text] /Font << /F1 2 0 R /F2 3 0 R >> >> >>\nendobj\n".encode()
@@ -178,7 +174,6 @@ class PDFReportGenerator:
         return self._one_page_pdf(report_payload)
 
     def _one_page_pdf(self, r: dict[str, Any]) -> bytes:
-        parts: list[bytes] = []
         content: list[str] = []
         y_ref = 842.0
 

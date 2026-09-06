@@ -30,4 +30,4 @@ pip install fpdf2
 python generate_pdfs.py  # reads 07,08,11,13,14,15 → submission/*.pdf
 ```
 
-Live verification at generation time: `287 tests pass`, `dossier 5 hops valid:True`, `demo_scenario 23 pass`.
+Live verification at generation time: `293 tests pass`, `dossier 5 hops valid:True`, `demo_scenario 24 pass / 0 fail / 0 skip`.

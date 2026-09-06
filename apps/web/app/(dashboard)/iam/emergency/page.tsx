@@ -12,6 +12,7 @@ import { Panel } from "@/components/layout/panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { IamEmptyState } from "@/components/iam/empty-state";
 import {
   Form,
   FormControl,
@@ -192,6 +193,11 @@ export default function IamEmergencyPage() {
               <div className="flex items-center gap-2 p-6 font-mono text-xs text-muted-foreground">
                 <Loader2 className="animate-spin" /> Loading requests…
               </div>
+            ) : (data ?? []).length === 0 ? (
+              <IamEmptyState
+                title="No emergency requests"
+                description="Emergency access requests will appear here when submitted."
+              />
             ) : (
               <table className="w-full text-left text-sm">
                 <thead>

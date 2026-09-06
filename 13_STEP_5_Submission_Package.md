@@ -4,7 +4,7 @@
 
 **Repo:** https://github.com/chavdaravi641-byte/sentinel (`master` @ `d41b2f4` → live)  
 **Live (local evaluation):** `http://localhost:8000/docs` (OpenAPI) + `http://localhost:3000/login` (admin@sentinel.gp / Admin@2026)  
-**Stack:** 51 cameras, 287 tests pass, dossier `5 hops valid:True` (live 2026-09-05 sha `4eb27109…`)
+**Stack:** 51 cameras, 293 tests pass, dossier `5 hops valid:True` (live verification)
 
 ---
 
@@ -64,7 +64,7 @@
 
 - **Source repo:** https://github.com/chavdaravi641-byte/sentinel (public, `master`, push verified 2026-09-05).
 - **Live deployment:** `http://localhost:8000` (API `/docs`) + `http://localhost:3000` (Web) — 5 containers healthy; hosted URL to add if deployed to cloud.
-- **Docs package:** Bundle `07`–`11` + `01`–`06` + `SCALABILITY` + `Project_Structure_Report` (all markdown, pandoc-ready), plus live verification bundle (`287 pytest`, `demo_scenario 23 pass`, dossier PDF).
+- **Docs package:** Bundle `07`–`11` + `01`–`06` + `SCALABILITY` + `Project_Structure_Report` (all markdown, pandoc-ready), plus live verification bundle (`293 pytest`, `demo_scenario 24 pass`, dossier PDF).
 
 ---
 

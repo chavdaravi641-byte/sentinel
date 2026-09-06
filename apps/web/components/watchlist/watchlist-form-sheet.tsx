@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -102,10 +102,14 @@ export function WatchlistFormSheet({
       notes: "",
     },
   });
+  const { control, reset } = form;
+  const targetType = useWatch({ control, name: "target_type" });
+  const category = useWatch({ control, name: "category" });
+  const sourceDb = useWatch({ control, name: "source_db" });
 
   useEffect(() => {
     if (open) {
-      form.reset(
+      reset(
         entry
           ? {
               target_type: entry.target_type,
@@ -123,7 +127,7 @@ export function WatchlistFormSheet({
             },
       );
     }
-  }, [open, entry, form]);
+  }, [open, entry, reset]);
 
   async function handleSubmit(values: WatchlistFormValues) {
     const plate = values.identifier_number.trim().toUpperCase().replace(/\s+/g, "");
@@ -163,7 +167,7 @@ export function WatchlistFormSheet({
               Target Type
             </Label>
             <Select
-              value={form.watch("target_type")}
+              value={targetType}
               onValueChange={(v) => form.setValue("target_type", v as WatchlistFormValues["target_type"])}
             >
               <SelectTrigger className="mt-1.5 font-mono uppercase">
@@ -197,7 +201,7 @@ export function WatchlistFormSheet({
               Category
             </Label>
             <Select
-              value={form.watch("category")}
+              value={category}
               onValueChange={(v) => form.setValue("category", v as WatchlistFormValues["category"])}
             >
               <SelectTrigger className="mt-1.5 font-mono uppercase">
@@ -218,7 +222,7 @@ export function WatchlistFormSheet({
               Source Database
             </Label>
             <Select
-              value={form.watch("source_db")}
+              value={sourceDb}
               onValueChange={(v) => form.setValue("source_db", v as WatchlistFormValues["source_db"])}
             >
               <SelectTrigger className="mt-1.5 font-mono uppercase">

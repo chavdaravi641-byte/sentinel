@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FileDown,
   FileText,
@@ -30,6 +30,17 @@ export default function VehicleRoutesPage() {
   const [plateInput, setPlateInput] = useState("");
   const [plate, setPlate] = useState("");
   const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    const initialPlate =
+      new URLSearchParams(window.location.search).get("plate")?.trim().toUpperCase().replace(/\s+/g, "") ?? "";
+    if (initialPlate.length < 6) return;
+    const timer = window.setTimeout(() => {
+      setPlateInput(initialPlate);
+      setPlate(initialPlate);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const { data, isLoading, isError, error } = useVehicleInvestigate(
     plate,

@@ -5,7 +5,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.base import clamp_page, count_rows
+from src.crud.base import clamp_page
 from src.models.watchlist import (
     Watchlist,
     WatchlistCategory,

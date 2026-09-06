@@ -164,7 +164,6 @@ def test_authorizer_rbac_and_isolation():
 
 
 def test_hierarchy_validation():
-    dist = DepartmentType.DISTRICT
     assert validate_jurisdiction(
         DeptNode(_x(), "", "", DepartmentType.SUB_DIVISION, None, JurisdictionScope.CUSTOM, 0),
         DepartmentType.POLICE_STATION) is True

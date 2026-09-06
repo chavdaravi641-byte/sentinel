@@ -34,10 +34,10 @@ GET /api/v1/registry/gis/report?format=json → cameras=51 blind_cells=10800
 
 ## 4. How to Reproduce (Video Script)
 
-1. `docker compose up --build -d` → `docker compose ps` (5 healthy) → `curl /api/v1/health` ok.
+1. `docker compose up --build -d` → `docker compose ps` (five services running; Postgres/Redis healthchecks healthy) → `curl /api/v1/health` and inspect live component status.
 2. Login `http://localhost:3000/login` (admin@sentinel.gp / Admin@2026).
 3. Navigate `app/cameras` (51 cards, status badges) → `app/map` (51 geo markers) → `app/routes` (dossier panel).
 4. Show `GET /api/v1/cameras?limit=50` and `GET /api/v1/registry?limit=50` JSON (vendor diversity).
 5. Trigger `GET /streams/discover_onvif` and `POST /cameras/{lavfi-id}/test` for live-source path.
 
-> For recording, use `python -m src.demo_scenario` (HTTP integration, 23 pass) as the narration backbone; add `--inject` to bind a live `lavfi` feed through MediaMTX during capture.
+> For recording, use `python -m src.demo_scenario` (HTTP integration, 24 pass / 0 fail / 0 skip) as the narration backbone; add `--inject` to bind a live `lavfi` feed through MediaMTX during capture.

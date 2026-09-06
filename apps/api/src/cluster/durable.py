@@ -30,7 +30,6 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Any
 
 from sqlalchemy import delete, select, update
@@ -42,7 +41,6 @@ from src.cluster.models import (
     ClusterNode,
     OwnershipChange,
 )
-from src.cluster.store import NodeStatus
 
 
 @dataclass

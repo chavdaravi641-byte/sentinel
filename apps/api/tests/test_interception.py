@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.anpr.interception import compute_interception, JUNCTION_CATEGORIES
+from src.anpr.interception import compute_interception
 from src.anpr.vehicle_intel.graph import CameraGraph, GraphConfig
 
 
@@ -89,3 +89,4 @@ def test_confidence_decreases_over_distance():
     near = compute_interception(g, "A", plate="P", radius_km=25.0, top_k=1)
     far = compute_interception(g, "A", plate="P", radius_km=100.0, top_k=1, speed_kph=35.0)
     assert near.confidence > 0
+    assert far.confidence > 0

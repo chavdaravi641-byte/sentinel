@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 
 from src.api.deps import get_current_user
 from src.cluster.router import router
-from src.cluster.service import ClusterService, get_service, get_store
+from src.cluster.service import ClusterService, get_store
 from src.models.user import User, UserRole
 
 

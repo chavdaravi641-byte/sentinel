@@ -238,7 +238,6 @@ async def _act_stream(client: Any, r: Results, token: str, inject: bool) -> None
             from src.core.database import AsyncSessionLocal
 
             rtsp_url = os.getenv("DEMO_RTSP_URL", "rtsp://127.0.0.1:8554/demo")
-            ok = False
             async with AsyncSessionLocal() as db:
                 try:
                     from uuid import UUID as _UUID
@@ -250,7 +249,6 @@ async def _act_stream(client: Any, r: Results, token: str, inject: bool) -> None
                         r.fail("Live RTSP bind", "camera not found in DB")
                     else:
                         updated = await _update_camera_rtsp(db, cam_obj.id, rtsp_url)
-                        ok = updated.status.value in ("online", "ONLINE") or updated.is_active
                         r.ok(
                             f"Bound {cam['name']} -> {rtsp_url} "
                             f"(status={updated.status.value}, is_active={updated.is_active})"
@@ -308,7 +306,6 @@ async def _act_watchlist(client: Any, r: Results, token: str) -> None:
         from src.anpr.alerts import (
             AnprAlertEngine,
             RULE_BLACKLIST,
-            RULE_LOW_CONFIDENCE,
             RULE_MULTI_CAMERA,
         )
         from src.anpr.blacklist import BlacklistEngine

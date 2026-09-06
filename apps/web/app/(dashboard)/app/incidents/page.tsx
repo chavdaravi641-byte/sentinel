@@ -93,7 +93,12 @@ function IncidentCard({
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Incident actions"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100"
+            >
               <span className="text-muted-foreground">•••</span>
             </Button>
           </DropdownMenuTrigger>

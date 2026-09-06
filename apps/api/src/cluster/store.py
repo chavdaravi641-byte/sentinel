@@ -28,7 +28,8 @@ from datetime import datetime, timezone
 from typing import Any, Callable
 
 from src.cluster.config import settings
-from src.cluster.scheduler import Scoreable, best_node
+from src.core.logging import log
+from src.cluster.scheduler import best_node
 
 UTC = timezone.utc
 
@@ -276,8 +277,14 @@ class ClusterStore:
                 expected_generation=expected_generation,
                 values=values,
             )
-        except Exception:
-            return True
+        except Exception as exc:
+            log.error(
+                "cluster.persist_camera_failed",
+                camera_id=str(lease.camera_id),
+                error=str(exc),
+                exc_info=True,
+            )
+            return False
 
     async def _persist_new_camera(self, lease: CameraLease) -> None:
         if self.backend is None:
@@ -295,8 +302,12 @@ class ClusterStore:
                 priority=lease.priority,
                 synthetic=lease.synthetic,
             ))
-        except Exception:
-            pass
+        except Exception as exc:
+            log.warning(
+                "cluster.persist_new_camera_failed",
+                camera_id=str(lease.camera_id),
+                error=str(exc),
+            )
 
     async def _reload_camera(self, lease: CameraLease) -> None:
         """Refresh an in-memory camera from durable state after a CAS conflict.
@@ -326,16 +337,16 @@ class ClusterStore:
             return
         try:
             await self.backend.append_change(change.to_dict())
-        except Exception:
-            pass
+        except Exception as exc:
+            log.warning("cluster.persist_change_failed", error=str(exc))
 
     async def _persist_heartbeat(self, hb: dict[str, Any]) -> None:
         if self.backend is None:
             return
         try:
             await self.backend.append_heartbeat(hb)
-        except Exception:
-            pass
+        except Exception as exc:
+            log.warning("cluster.persist_heartbeat_failed", error=str(exc))
 
     # ------------------------------------------------------------------ #
     # Node registry / discovery (Parts 1 & 4)
@@ -581,7 +592,7 @@ class ClusterStore:
             return lease
 
     def owned_cameras(self, node_id: str) -> list[CameraLease]:
-        return [l for l in self._leases.values() if l.owner_node_id == node_id]
+        return [lease for lease in self._leases.values() if lease.owner_node_id == node_id]
 
     # ------------------------------------------------------------------ #
     # Lease-based failover (Part 5)

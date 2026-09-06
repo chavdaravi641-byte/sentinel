@@ -16,13 +16,11 @@ the inference/capture loop never blocks.
 from __future__ import annotations
 
 import hashlib
-import os
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
 import cv2
-import numpy as np
 
 from src.anpr.primitives import EvidenceDoc
 from src.core.config import settings

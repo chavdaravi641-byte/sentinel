@@ -6,7 +6,6 @@ emergency (break-glass) access and session revocation.
 
 from __future__ import annotations
 
-import uuid
 from datetime import timedelta
 
 from sqlalchemy import select

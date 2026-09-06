@@ -352,6 +352,8 @@ export interface DashboardSummary {
   recent_alerts: Alert[];
   camera_geo: CameraGeoPoint[];
   system: SystemHealth;
+  latest_incident: Incident | null;
+  detections_today: number;
 }
 
 export interface HealthResponse {

@@ -1,5 +1,6 @@
 """Shared FastAPI dependencies: auth, role guard, request context."""
 
+import ipaddress
 from typing import Annotated
 from uuid import UUID
 
@@ -7,6 +8,7 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.config import settings
 from src.core.database import get_db
 from src.core.security import decode_access_token
 from src.crud import user as user_crud
@@ -81,9 +83,37 @@ StaffUser = Annotated[User, Depends(require_roles(UserRole.ADMIN, UserRole.OPERA
 def get_request_meta(request: Request) -> tuple[str | None, str | None]:
     """Extract user-agent and client IP for session auditing."""
     user_agent = request.headers.get("user-agent")
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        ip = forwarded.split(",")[0].strip()
-    else:
-        ip = request.client.host if request.client else None
+    peer = request.client.host if request.client else None
+    ip = peer
+    forwarded_headers = request.headers.getlist("x-forwarded-for")
+    if peer and forwarded_headers:
+        if len(forwarded_headers) != 1:
+            return user_agent, ip
+        try:
+            peer_address = ipaddress.ip_address(peer)
+        except ValueError:
+            peer_address = None
+        if peer_address and any(
+            peer_address in network for network in settings.trusted_proxy_networks
+        ):
+            forwarded = [
+                value.strip()
+                for value in forwarded_headers[0].split(",")
+                if value.strip()
+            ]
+            try:
+                forwarded_addresses = [ipaddress.ip_address(value) for value in forwarded]
+            except ValueError:
+                return user_agent, ip
+            for forwarded_address in reversed(forwarded_addresses):
+                try:
+                    is_trusted = any(
+                    forwarded_address in network
+                    for network in settings.trusted_proxy_networks
+                    )
+                except TypeError:
+                    return user_agent, ip
+                if not is_trusted:
+                    ip = str(forwarded_address)
+                    break
     return user_agent, ip

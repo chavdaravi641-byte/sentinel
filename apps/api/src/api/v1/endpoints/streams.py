@@ -448,7 +448,6 @@ async def hls_playlist_endpoint(camera_id: UUID, request: Request, *, db: DBDep)
     session = await get_manager().session(camera_id)
     if session is None or not session.live:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Stream is not running.")
-    cam_key = str(camera_id)
     upstream = f"{settings.MEDIAMTX_BASE_URL.rstrip('/')}/sentinel/{camera_id}/index.m3u8"
     return await _proxy_edge(request, upstream, media_type="application/vnd.apple.mpegurl")
 

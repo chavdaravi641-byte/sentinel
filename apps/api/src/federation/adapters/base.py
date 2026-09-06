@@ -10,12 +10,11 @@ interfaces production-accurate while remaining fully testable.
 
 from __future__ import annotations
 
-import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
 
-from src.federation.models import CameraState, StreamProtocol, Vendor
+from src.federation.models import StreamProtocol, Vendor
 
 
 @dataclass

@@ -256,11 +256,11 @@ async def case_audit(case_id: uuid.UUID, *, db: DBDep, user: CurrentUser) -> dic
     return {
         "case_id": str(case_id),
         "entries": [
-            {"id": str(l.id), "officer_id": str(l.officer_id) if l.officer_id else None,
-             "officer_name": l.officer_name, "action": l.action, "query": l.query,
-             "evidence_accessed": l.evidence_accessed,
-             "created_at": l.created_at.isoformat() if l.created_at else None}
-            for l in rows
+            {"id": str(log_entry.id), "officer_id": str(log_entry.officer_id) if log_entry.officer_id else None,
+             "officer_name": log_entry.officer_name, "action": log_entry.action, "query": log_entry.query,
+             "evidence_accessed": log_entry.evidence_accessed,
+             "created_at": log_entry.created_at.isoformat() if log_entry.created_at else None}
+            for log_entry in rows
         ],
         "count": len(rows),
     }

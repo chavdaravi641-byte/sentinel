@@ -5,7 +5,6 @@ Run automatically on startup when SEED_ON_STARTUP=true or manually via
 """
 
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
 
 from sqlalchemy import func, select
 

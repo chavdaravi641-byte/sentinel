@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class MfaSetupRequest(BaseModel):
-    pass
+    """Empty request body for starting MFA enrollment."""
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class MfaSetupResponse(BaseModel):

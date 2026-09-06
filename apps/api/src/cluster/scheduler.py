@@ -13,8 +13,8 @@ excluded or heavily penalised so we never schedule onto a dead host.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Protocol
+from dataclasses import dataclass
+from typing import Protocol
 
 
 class Scoreable(Protocol):

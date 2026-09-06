@@ -14,19 +14,20 @@ rtspAddress: :8554
 hls: true
 hlsAddress: :8888
 hlsAlwaysRemux: yes
-hlsVariant: fmp4
+hlsVariant: mpegts
 hlsPartDuration: 200ms
 hlsSegmentCount: 7
 hlsSegmentDuration: 1s
 
-# RTSPS (TLS ingest for remote cameras)
+# RTSPS is disabled in the reproducible demo because no certificate is mounted.
+# Production deployments should provide certificates and enable optional TLS.
 rtspsAddress: :8322
-rtspEncryption: optional
+rtspEncryption: "no"
 
 # WebRTC out (WHEP) with ICE for NAT traversal
 webrtc: true
 webrtcAddress: :8889
-webrtcICEServers:
+webrtcICEServers2:
   - url: stun:stun.l.google.com:19302
 
 # Path defaults: accept any publisher/reader without credentials (internal net).
